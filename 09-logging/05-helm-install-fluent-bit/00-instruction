@@ -1,0 +1,3 @@
+#根据自己的需要调整values.yaml
+helm install fluent-bit -f  fluent-bit/values.yaml  fluent/fluent-bit     -n fluent-bit
+#我们是将fluent-bit的日志发送到loki,有关为loki的展示数据打标签的说明请参考[https://docs.fluentbit.io/manual/pipeline/outputs/loki]

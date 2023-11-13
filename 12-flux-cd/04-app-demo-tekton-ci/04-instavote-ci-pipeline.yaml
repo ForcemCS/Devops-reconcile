@@ -1,0 +1,169 @@
+apiVersion: tekton.dev/v1beta1
+kind: Pipeline
+metadata:
+  name: instavote-ci
+spec:
+  description: |
+      This is a pipeline template which performs the follwing tasks:
+      - Clones a subset of file for one microservice from a mono-repo
+        e.g. vote/* result/* worker/* matching patterns provided.
+      - Lists all the files from the cloned workspace to validate if 
+        it has cloned the correct subpath matching your microservice. 
+      - Builds a container image from the workspace which contains 
+        the Dockerfile. It accepts imageUrl and imageTag params to 
+        define the tag.  The same task also pushes the image to the 
+        registry. 
+      Some of the additional  notable features of this template include:
+      - Cloned repo is passed to subsequent Tasks using a Workspace. 
+      - Orders Tasks in a Pipeline using "runAfter" so that
+        git-clone completes before we try to read from the Workspace 
+        to find the Dockerfile and build an image.
+      - Uses a volumeClaimTemplate Volume as a Workspace.
+      - Uses a secret generated with config.json and mounts it 
+        as a worksapce with name dockerconfig to provide registry 
+        credentials. 
+      - Avoids hard-coded paths by using a Workspace's path
+        variable instead.
+  params:                          #给所有任务使用
+  - name: repoUrl
+    type: string
+    description: The git repository URL to clone from.
+  - name: revision
+    type: string
+    description: The git branch,tag,sha etc. to fetch
+  - name: sparseCheckoutDirectories
+    type: string
+    description: 捡出项目的特定目录构建持续集成管道
+  - name: imageUrl
+    type: string
+    description: URL of image repository in user/repo format. Do not provide the tag. e.g. dopsdemo/vote
+    default: user/repo
+  - name: imageTag
+    type: string
+    description: Tag to apply to the built image.
+    default: latest
+  - name: pathToContext
+    type: string
+    description: The path to the build context relative to your source repo's root. This is used by Kaniko.
+    default: .
+  - name: pathToDockerFile
+    type: string
+    description: The path to the dockerfile to build, relative to the context.
+    default: Dockerfile
+  workspaces:                      #给所有任务使用
+  - name: git-credentials
+    description: My ssh credentials
+  - name: shared-data
+    description: |
+      This workspace will receive the cloned git repo and be passed
+      to the next Task to list all cloned files and directories.
+  - name: dockerconfig
+    description: |
+      Add docker's config.json file as a secret and provide it as a reference.
+      #- name: kaniko-crt
+      #description: |
+      #这是harbor的证书，在这里是以configMap的形式提供的 
+  tasks:
+  - name: fetch-repo
+    taskRef:
+      name: git-clone
+    workspaces:
+    - name: output
+      workspace: shared-data
+    - name: ssh-directory
+      workspace: git-credentials
+    params:
+    - name: url
+      value: $(params.repoUrl)
+    - name: revision
+      value: $(params.revision)
+    - name: sparseCheckoutDirectories
+      value: $(params.sparseCheckoutDirectories)
+  - name: misc
+    runAfter: ["fetch-repo"]  # Wait until the clone is done before listing all files and directories cloned
+    workspaces:               #这个任务中名为source的工作空间提供存储能力
+    - name: source                                     
+      workspace: shared-data                              #提供了存储能力
+    params:                                               #为这个任务的参数实例化值
+    - name: commit-hash
+      value: $(tasks.fetch-repo.results.commit)
+    taskSpec:
+      workspaces:      #创建了一个工作空间，但是需要外部的存储能力
+      - name: source
+      params: 
+      - name: commit-hash
+      results: 
+      - name: current-ts
+      - name: short-sha
+      steps:
+      - image: zshusers/zsh:4.3.15
+        script: |
+          #!/usr/bin/env zsh
+          ls -R $(workspaces.source.path)/
+        resources: 
+          requests: 
+            memory: 64Mi 
+            cpu: 100m 
+          limits: 
+            memory: 128Mi 
+            cpu: 200m
+      - name: print-date-unix-timestamp
+        image: bash:latest
+        script: |
+          #!/usr/bin/env bash
+          date +%s | tr -d '\n' |  tee $(results.current-ts.path)
+        resources:
+          requests:
+            memory: 64Mi
+            cpu: 100m
+          limits:
+            memory: 128Mi
+            cpu: 200m
+      - name: shorten-commit-hash
+        image: bash:latest
+        script: |
+          #!/usr/bin/env bash
+          echo $(params.commit-hash) | cut -c -8 | tr -d '\n'|  tee $(results.short-sha.path)
+        resources:
+          requests:
+            memory: 64Mi
+            cpu: 100m
+          limits:
+            memory: 128Mi
+            cpu: 200m
+  - name: img-build-publish
+    taskRef:
+      name: kaniko
+    runAfter:
+    - fetch-repo
+    - misc
+    workspaces:
+    - name: source
+      workspace: shared-data
+    - name: dockerconfig
+      workspace: dockerconfig
+    params:
+    - name: CONTEXT
+      value: '$(params.pathToContext)'
+    - name: IMAGE
+      value: '$(params.imageUrl):$(params.revision)-$(tasks.misc.results.short-sha)-$(tasks.misc.results.current-ts)'
+    - name: EXTRA_ARGS
+      value: [ "--skip-tls-verify"]
+  - name: verify-digest
+    runAfter:
+    - img-build-publish
+    params:
+    - name: digest
+      value: $(tasks.img-build-publish.results.IMAGE_DIGEST)
+    taskSpec:
+      params:
+      - name: digest
+      steps:
+      - name: bash
+        image: ubuntu
+        script: |
+          echo $(params.digest)
+          case .$(params.digest) in
+            ".sha"*) exit 0 ;;
+            *)       echo "Digest value is not correct" && exit 1 ;;
+          esac

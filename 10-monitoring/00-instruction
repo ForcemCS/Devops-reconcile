@@ -1,0 +1,10 @@
+#如何部署kube-prometheus,请参考[https://prometheus-operator.dev]
+#通过monitoring-service-endpoints.yaml三个演示服务
+#通过demo-service-rules.yaml将规则文件自动添加到prometheus的配置中（ruleSelector:）
+ 有关更多内容查看[https://sysdig.com/blog/kubernetes-monitoring-prometheus-operator-part3/]
+ Prometheus 的/alerts页面向您显示什么信息？
+ 1.它显示当前正在等待和触发的警报，以及它们的完整标签和注释详细信息
+ 2.它显示每个警报开始触发的时间。
+#若想要监控除了 default  montoring kube-system之外的名称空间的资源，请参考
+ https://www.sobyte.net/post/2022-06/kube-prometheus-namespace/
+

@@ -1,0 +1,20 @@
+kubectl  create  ns  fluent-bit  
+kubectl create configmap fluentbit-config --from-file ~/fluent-bit/fluent-bit.conf  -n fluent-bit 
+kubectl  apply   -f fluent-bit.yaml
+
+
+进行测试
+root@master01:~/fluent-bit# kubectl  get pods -n fluent-bit -o wide  
+NAME              READY   STATUS    RESTARTS   AGE   IP                NODE       NOMINATED NODE   READINESS GATES
+fluentbit-86f68   1/1     Running   0          69s   192.168.196.148   node01     <none>           <none>
+fluentbit-kpw25   1/1     Running   0          69s   192.168.241.104   master01   <none>           <none>
+fluentbit-vfvlt   1/1     Running   0          69s   192.168.186.202   node03     <none>           <none>
+fluentbit-wh8kj   1/1     Running   0          69s   192.168.140.78    node02     <none>           <none>
+root@master01:~/fluent-bit# curl -H "content-type: application/json" -d '{"Hi":"Mom"}' http://192.168.196.148:24220/fluentbit
+
+
+root@master01:~/fluent-bit# kubectl logs --tail=1 -l k8s-app=fluentbit-logging  -n fluent-bit 
+[0] fluentbit: [[1695166862.622577251, {}], {"Hi"=>"Mom"}]
+[2023/09/20 08:12:09] [ info] [output:stdout:stdout.0] worker #0 started
+[2023/09/19 23:38:53] [ info] [output:stdout:stdout.0] worker #0 started
+[2023/09/19 23:39:41] [ info] [output:stdout:stdout.0] worker #0 started

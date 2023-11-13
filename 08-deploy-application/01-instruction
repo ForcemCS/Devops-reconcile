@@ -1,0 +1,28 @@
+#我们以hellocd应用程序为例，这个示例是使用CNCF提供的
+#有几个指令需要说明的（只是为了记忆，与本演示无直接关系）
+git  log   --branches 会显示提交的历史，及其每个分支的HEAD指向
+git status            显示目录中未跟踪的文件
+#对于maven项目的构建环境，我们使用打包好的docker镜像来实现
+docker volume create m2
+docker  container   run   -p 31080:8080   --rm -it  -v m2:/root/.m2  -v  /root/hellocd:/app  maven:3.8-openjdk-17-slim   mvn  spring-boot:run    -f  /app/pom.xml    (/root/hellocd为项目目录)
+该容器拥有运行Java应用程序所需的构建工具，包括Maven、Java等
+#部署服务器上需要拉取项目的代码，应用程序的执行用户需要有权限在gitlab上拉取代码，所在gitlab上配置ssh key
+在部署服务器上ssh-keygen 生成密钥对 将公钥的信息放在保存为gitlab的ssh key
+--------
+以上内容可以忽略
+使用jenkins的图形化界面实现自动化发布流程的步骤
+1.安装kubernetes及其他的和流水线相关的插件
+2.我们推送镜像是利用docker Host完成的
+3.我们使用jenkins/inbound-agent（jnlp）镜像来构建dynamic pod，同时我们还自定义了镜像，利用harbor
+FROM jenkins/inbound-agent:3142.vcfca_0cd92128-1
+USER root
+
+RUN apt-get update -qq && apt-get install -qqy apt-transport-https ca-certificates curl gnupg2 software-properties-common
+
+RUN curl -LO  "https://dl.k8s.io/v1.27.0/kubernetes-client-linux-amd64.tar.gz"  && tar xf  kubernetes-client-linux-amd64.tar.gz && install -o jenkins -g jenkins -m 0755  kubernetes/client/bin/kubectl   /usr/local/bin/kubectl
+
+USER jenkins
+#docker build -t  harbor.forcecs.com:32415/k8s-agent/jnlp:v1  -f  images/Dockerfile  .
+
+4.这个dynamic pod 默认是以default account来运行的，根据自己的需要进行配置
+kubectl create rolebinding build-sa-binding --clusterrole=cluster-admin  --serviceaccount=build:build-sa --namespace=build 

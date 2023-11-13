@@ -1,0 +1,3 @@
+#我们将jenkins-agent这台主机作为静态agent
+1.安装jenkins（插件不必安装）
+2.nohup   java -jar agent.jar -jnlpUrl http://jenkins.forcecs.com:32000/computer/jenkins%2Dagent/jenkins-agent.jnlp -secret 52cdc0cee005835db13e88f59f35146dd016b6dc12476c000902e9a1ba103efa -workDir "/home/jenkins/agent"    >msg.log 2>&1 &

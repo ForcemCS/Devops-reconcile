@@ -1,0 +1,3 @@
+在我们部署完harbor之后，需要将containerd对接到harbor中
+参考：https://github.com/containerd/containerd/blob/main/docs/cri/config.md#registry-configuration
+

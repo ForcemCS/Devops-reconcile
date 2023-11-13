@@ -1,0 +1,9 @@
+- job_name: "neiwang"
+  static_configs:
+  - targets: ["10.10.0.202:9100"]
+- job_name: "roh5-cadvisor"
+  static_configs:
+  - targets: ["10.10.0.202:8080"]
+- job_name: "game-monitoring"
+  static_configs:
+  - targets: ["10.10.0.202:10226"]

@@ -1,0 +1,37 @@
+1.新建需要的用户
+2.再先新建一个组，然后在这个组中关联或创建项目
+3.为特定用户Add SSH Key to  gitlab (当我们访问gitlab仓库的脚本或自动化工具的时候,无需在pipeline中编写密码信息)
+  这样就有了push  pull的权限了
+---
+#因为gitlab部署在集群外部，所以k8s集群需要解析外部的服务，修改coredns的cm配置
+apiVersion: v1
+data:
+  Corefile: |
+    .:53 {
+        errors
+        health {
+           lameduck 5s
+        }
+        ready
+        hosts {
+          12.0.0.21  jenkins.forcecs.com
+          12.0.0.22  harbor.forcecs.com
+          12.0.0.23  sonarqube.forcecs.com
+          12.0.0.30  gitlab.forcecs.com
+          fallthrough
+        }
+        kubernetes cluster.local in-addr.arpa ip6.arpa {
+           pods insecure
+           fallthrough in-addr.arpa ip6.arpa
+           ttl 30
+        }
+        prometheus :9153
+        forward . /etc/resolv.conf {
+           max_concurrent 1000
+        }
+        cache 30
+        loop
+        reload
+        loadbalance
+    }
+---

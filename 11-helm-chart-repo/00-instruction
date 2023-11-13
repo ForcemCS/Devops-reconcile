@@ -1,0 +1,46 @@
+helm repo add chartmuseum https://chartmuseum.github.io/charts 
+helm fetch chartmuseum/chartmuseum    --untar=true  
+#安装：
+helm install -f chartmuseum/values.yaml    my-chartmuseum chartmuseum/chartmuseum   -n chartmuseum 
+
+#升级：
+helm upgrade -f chartmuseum/values.yaml    my-chartmuseum chartmuseum/chartmuseum   -n chartmuseum 
+#UI(存在一定的问题)
+docker run -d -p  8066:3000   --name  chartmuseumui   -e  CHART_MUSEUM_URL="http://12.0.0.20:30911"    -e BASIC_AUTH_USERS='[{"username":"root", "password":"basic123"}]'  moreillon/chartmuseum-gui
+
+#卸载
+helm    -n chartmuseum  uninstall my-chartmuseum
+---------
+#将私有存储库添加到 Helm 客户端
+helm repo add  --username root  --password  basic123   game-server  http://12.0.0.20:30911
+
+#如何使用
+root@master01:~# helm search repo  game-server  --version 
+root@master01:~# helm search repo  game-server  --version 0.1.0
+NAME                	CHART VERSION	APP VERSION	DESCRIPTION                 
+game-server/quotegen	0.1.0        	           	worlds first quote generator
+
+
+#假设我们现在已经编写好了自己的chart,可以执行下速的操作来发布我们的应用
+root@jenkins-agent:~/helm# tree
+.
+├── pkg
+│   ├── index.yaml
+│   └── roh5-server-v1.tgz
+└── roh5server
+    ├── Chart.yaml
+    ├── templates
+    │   ├── _helpers.tpl
+    │   ├── deployment.yaml
+    │   └── service.yaml
+    └── values.yaml
+1.打包
+helm package  roh5server  -d pkg/
+2.增加索引（可以省略）
+helm   repo index   pkg/
+3.推送chart
+curl  -u root:basic123 -L --data-binary "@roh5-server-v1.tgz" http://12.0.0.20:30911/api/charts
+4.更新chart
+helm repo update game-server
+5.列出应用
+helm repo update game-serve

@@ -1,0 +1,58 @@
+# deployment for the demo service with three replicas.
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: coo-service
+  namespace: test
+  labels:
+    app: coo-service
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: coo-service
+  template:
+    metadata:
+      labels:
+        app: coo-service
+    spec:
+      containers:
+      - name: coo-service
+        image: harbor.forcecs.com:32415/monitoring/servicemonitor:v1 
+        imagePullPolicy: IfNotPresent
+        args:
+        - -listen-address=:80
+        ports:
+        - containerPort: 80
+---
+# A service that references the demo service deployment.
+apiVersion: v1
+kind: Service
+metadata:
+  namespace: test
+  name: coo-service
+  labels:
+    app: coo-service
+spec:
+  ports:
+  - port: 80
+    name: web
+  selector:
+    app: coo-service
+---
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  namespace: test
+  name: coo-service
+  labels:
+    app: coo-service
+spec:
+  selector:
+    matchLabels:
+      app: coo-service
+  endpoints:
+  - port: web
+  namespaceSelector:
+    matchNames:
+    - test

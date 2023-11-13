@@ -1,0 +1,6 @@
+flux create secret tls harbor-certs \
+  --namespace=flux-system \
+  --tls-crt-file=./client.crt \
+  --tls-key-file=./client.key \
+  --ca-crt-file=./ca.crt \
+  --export > harbor-certs.yaml

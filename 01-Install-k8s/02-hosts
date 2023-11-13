@@ -1,0 +1,10 @@
+[k8s]
+master01 ansible_host=10.10.0.204
+node01   ansible_host=10.10.0.205
+node02   ansible_host=10.10.0.206
+node03   ansible_host=10.10.0.207
+
+[data]
+redis    ansible_host=10.10.0.208
+mysql    ansible_host=10.10.0.209
+#ansible all -m copy -a "src=/etc/hosts dest=/etc/hosts mode=0644"

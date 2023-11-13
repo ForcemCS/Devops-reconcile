@@ -1,0 +1,19 @@
+kubectl    create  cm fluentd-config     --from-file ~/fluent/fluentd-kube.conf     -n fluentd
+
+kubectl  apply   -f  fluentd.yaml
+          
+接下来我们进行测试
+root@master01:~/fluent# kubectl  get  pods -n fluentd  -o wide  
+NAME            READY   STATUS    RESTARTS   AGE     IP                NODE       NOMINATED NODE   READINESS GATES
+fluentd-5pjtp   1/1     Running   0          7m59s   192.168.186.232   node03     <none>           <none>
+fluentd-7xwvp   1/1     Running   0          7m59s   192.168.241.103   master01   <none>           <none>
+fluentd-qrtn9   1/1     Running   0          7m59s   192.168.196.158   node01     <none>           <none>
+fluentd-txl69   1/1     Running   0          7m59s   192.168.140.81    node02     <none>           <none>
+
+root@master01:~/fluent# curl -X POST -d 'json={"Hi":"Mom"}' http://192.168.186.232:24220/fluentd
+
+root@master01:~/fluent# kubectl -n fluentd  logs --tail=1 -l k8s-app=fluentd-logging
+2023-09-19 23:03:30.995650034 +0000 fluentd: {"Hi":"Mom"}
+2023-09-20 07:37:42.511381227 +0000 fluent.info: {"worker":0,"message":"fluentd worker is now running worker=0"}
+2023-09-19 23:02:07.063233181 +0000 fluent.info: {"worker":0,"message":"fluentd worker is now running worker=0"}
+2023-09-19 23:01:59.816453976 +0000 fluent.info: {"worker":0,"message":"fluentd worker is now running worker=0"}

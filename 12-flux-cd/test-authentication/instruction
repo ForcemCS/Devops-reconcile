@@ -1,0 +1,5 @@
+请参考: https://github.com/tektoncd/pipeline/blob/release-v0.53.x/examples/v1/taskruns/authenticating-git-commands.yaml
+        https://tekton.dev/docs/pipelines/auth/#configuring-authentication-for-git
+#ssh-keygen -t rsa -b 4096 -f "/root/game/tekton_key"
+#cat  tekton_key  | tr -d '\n'     |base64
+

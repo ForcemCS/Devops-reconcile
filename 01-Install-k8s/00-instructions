@@ -1,0 +1,2 @@
+#apt install -y lrzsz unzip  net-tools  iputils-ping  ufw   policycoreutils jq  cron  ntpdate bash-completion
+kubeadm部署集群的方式可以查看官方文档，有很详细的说明

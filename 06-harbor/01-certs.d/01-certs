@@ -1,0 +1,52 @@
+TLS简单介绍: 
+1.数据通过对称密钥进行加密，但是在发送被加密数据的时候，对称密钥有可能被黑客获取，不安全，那怎么办呢？
+2.我们可以利用ssh的原理来说明（在服务端生成了一对密钥，公钥是公开的，谁都可以拿到，假设用户拿到了公钥，那么我们现在用这个公钥来加密上一步的对称密钥，这样对称密钥被加密了，黑客
+是无法数据的，因为第二部的私钥只有服务端有，他才能解密对称密钥，进而用对称密钥解密数据）
+那么黑客进而又想了一个办法：建立了一套与服务端一摸一样的网站，进行各种网络路由，你打开的网址与真实的服务端的网址一摸一样，以此来得到你的输入信息(例如：账号和密码)，
+3.现在唯一的办法就是验证第二部中发送给我们的公钥（黑客或者真实的服务端）。实际的做法是不会直接 发送公钥而是发送一个带有公钥信息的证书，但是黑客也会生成这样的证书，又如何解决呢？
+4.假设我们可以了解到证书的签发者，（浏览器可以帮我们验证）
+5.证书的签发机构被称为Ctificate Authority(CA),权威机构有Symantec Digicert等
+6.生成信任的证书的工作方式是：生成一个证书签署请求（CSR）,发送给CA进行签名，证书办法机构验证你的详细信息，一旦验证完毕，他们颁发证书给你，如果黑客以同样的方式进行操作，CA机构验证之后，不予颁发
+7.但是浏览器又是如何知道CA是否是合法的（浏览去如何验证证书中的CA是否是Symantec Digicert等，而不是自称是某某某的权威机构）
+8.CA本身有一套公钥和私有对，所有CA的公钥统统内置于浏览器中，浏览器使用CA的公钥验证
+9.约定：通常带有公钥锁的证书被称为crt或者pem,私钥扩展名为.key
+----------
+#生成证书颁发机构证书
+1.生成 CA 证书私钥。
+openssl genrsa -out ca.key 4096
+2.生成 CA 证书。
+#调整选项中的值-subj以反映您的组织。如果您使用 FQDN 连接 Harbor 主机，则必须将其指定为公用名 ( CN) 属性。
+openssl req -x509 -new -nodes -sha512 -days 3650 \
+ -subj "/C=CN/ST=Beijing/L=Beijing/CN=harbor.forcecs.com" \
+ -key ca.key \
+ -out ca.crt
+ 
+生成服务器证书
+1.生成私钥。
+openssl genrsa -out harbor.forcecs.com.key 4096
+2.生成证书签名请求 (CSR)。
+openssl req -sha512 -new \
+    -subj "/C=CN/ST=Beijing/L=Beijing/CN=harbor.forcecs.com" \
+    -key harbor.forcecs.com.key \
+    -out harbor.forcecs.com.csr
+    
+3.生成 x509 v3 扩展文件。
+cat > v3.ext <<-EOF
+authorityKeyIdentifier=keyid,issuer
+basicConstraints=CA:FALSE
+keyUsage = digitalSignature, nonRepudiation, keyEncipherment, dataEncipherment
+extendedKeyUsage = serverAuth
+subjectAltName = @alt_names
+
+[alt_names]
+DNS.1=harbor.forcecs.com
+DNS.2=harbor.forcecs
+DNS.3=harbor
+EOF
+
+4.使用该v3.ext文件为您的 Harbor 主机生成证书。
+openssl x509 -req -sha512 -days 3650 \
+    -extfile v3.ext \
+    -CA ca.crt -CAkey ca.key -CAcreateserial \
+    -in harbor.forcecs.com.csr \
+    -out harbor.forcecs.com.crt

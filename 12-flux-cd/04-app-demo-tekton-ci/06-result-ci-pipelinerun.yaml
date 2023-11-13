@@ -1,0 +1,34 @@
+---
+apiVersion: tekton.dev/v1beta1
+kind: PipelineRun
+metadata:
+  generateName: result-ci-
+spec:
+  serviceAccountName: pipeline-gitlab
+  pipelineRef:
+    name: instavote-ci
+  podTemplate:
+    securityContext:
+      fsGroup: 65532
+  workspaces:
+  - name: shared-data
+    persistentVolumeClaim:
+      claimName: result-pvc
+  - name: git-credentials
+    secret:
+      secretName: gitlab-credentials
+  - name: dockerconfig
+    secret:
+      secretName: docker-credentials
+  params:
+  - name: repoUrl
+    value: http://gitlab.forcemcs.cn/flux-cd/app-demo.git
+  - name: revision
+    value: main
+  - name: sparseCheckoutDirectories
+    value: /result/
+  - name: imageUrl
+    value: harbor.forcecs.com:32415/result/result
+  - name: pathToContext
+    value: result
+

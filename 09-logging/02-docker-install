@@ -1,0 +1,113 @@
+1.以容器的方式安装fluentd
+basic@docker-agent:~/fluentd$ pwd
+/home/basic/fluentd
+basic@docker-agent:~/fluentd$ cat docker.conf 
+<source>
+  @type http
+  port 24220
+  bind 0.0.0.0
+</source>
+
+<source>
+  @type forward
+  port 24224
+  bind 0.0.0.0
+</source>
+
+<match **>
+  @type stdout
+</match>
+
+
+sudo docker container run \
+-d \
+-p 24220:24220 \
+-p 24224:24224 \
+-v $HOME/fluentd/docker.conf:/fluentd/etc/docker.conf \
+-e FLUENTD_CONF=docker.conf \
+--name fluentd \
+fluentd:v1.16-1
+
+
+我们将使用curl向容器化的Fluentd实例发送一条简单的HTTP消息。因为我们将Fluentd配置为监听0.0.0.0（所有接口）和端口24220上的 HTTP 流量。
+使用curl命令向locahost:24220发送一条简单的JSON消息
+curl -d 'json={"hi":"mom", "severity":"superbad"}' http://localhost:24220/test/ing
+
+
+它会在 24224 端口监听入站。这意味着，只要我们在 localhost:24224 上监听了某个 Fluentd 实例（我们确实监听了），任何使用 Fluentd
+插件的任何 Docker 容器都可以将日志输出发送到这个地址。
+在容器世界中，任何写入 stdout 或 stderr 的文本都会被 Docker 捕捉并传送到终端。这是通过 Docker 日志驱动程序配置的，默认的日志驱动程序称为 "json-file"。默认情况下，容器输出会存储到 /var/lib/docker 中的文件。我们可以选择不同的默认日志驱动程序（即使是单个容器）。Docker 自身集成的
+Fluentd 日志驱动插件，默认情况下会将流量转发到 localhost:24224。
+docker 容器运行 --log-driver=fluentd 标志会告诉 Docker 将该容器的输出发送到 Fluentd。运行一个设置为使用 Fluentd 进行日志记录的 nginx 容器，试试看吧
+docker 插件运行设置为日志的 nginx 容器，试试看：
+
+sudo  docker container run -P -d --log-driver=fluentd --name nginx nginx:1.23
+
+
+basic@docker-agent:~/fluentd$ sudo  docker  ps  
+CONTAINER ID   IMAGE             COMMAND                  CREATED          STATUS          PORTS                                                                                                    NAMES
+45c40e2de5b2   nginx:1.23        "/docker-entrypoint.…"   7 seconds ago    Up 6 seconds    0.0.0.0:10240->80/tcp, :::10240->80/tcp                                                                  nginx
+45a93d3d3e87   fluentd:v1.16-1   "tini -- /bin/entryp…"   35 minutes ago   Up 35 minutes   0.0.0.0:24220->24220/tcp, :::24220->24220/tcp, 5140/tcp, 0.0.0.0:24224->24224/tcp, :::24224->24224/tcp   fluentd
+
+
+basic@docker-agent:~/fluentd$ sudo  docker container  logs    nginx    -f   会看到有http的请求日志
+
+basic@docker-agent:~/fluentd$ docker container logs fluentd |& sed -n -e '/nginx/,/.*/ p' 
+
+sed 命令会过滤掉所有行，直到看到 nginx，然后开始打印剩余的行。
+Fluentd 通过 Docker 从 NGINX 容器接收所有日志事件（包括 NGINX 报告的应用级事件）。Fluentd 转发插件要求以特定格式输入日志。
+格式的日志输入。幸运的是，内置的 Docker Fluentd 插件会自动为 Fluentd 格式化容器输出，同时用容器元数据（如容器 ID和名称等容器元数据）
+
+2.以容器的方式安装fluent-bit
+basic@docker-agent:~/fluent-bit$ cat  docker.conf
+[INPUT]
+    name http
+    host 0.0.0.0
+    port 24220
+[INPUT]
+    Name forward
+    Listen 0.0.0.0
+    Port 24224
+    Buffer_Chunk_Size 1M
+    Buffer_Max_Size 6M
+[OUTPUT]
+    name stdout
+    match *
+
+
+
+sudo  docker container run \
+-d \
+-p 24220:24220 \
+-p 24224:24224 \
+-v $HOME/fluent-bit/docker.conf:/fluent-bit/etc/fluent-bit.conf \
+--name fluent-bit \
+fluent/fluent-bit
+
+Fluent Bit 监听接口 0.0.0.0（所有接口）和 24220 端口上的 HTTP 流量。我们可以使用 curl 命令向 locahost:24220 发送一条简单的 JSON 消息。
+
+curl -H "content-type: application/json" -d '[{"hi":"mom"}]' http://localhost:24220
+
+curl -X POST -H "content-type: application/json" -d '[{"hi":"mom", "severity":"superbad"}]' http://localhost:24220/test/ing
+
+现在，我们已经在一个容器中启动并运行了 Fluent Bit,我们需要在这台机器上运行多个容器，并希望它们的所有日志输出都能被我们正在运行的 Fluent Bit 实例收集和处理。
+并由我们正在运行的 Fluent Bit 实例处理。
+在上一步的配置中，我们配置了以下源： 
+[INPUT]
+    Name forward
+    Listen 0.0.0.0
+    Port 24224
+    Buffer_Chunk_Size 1M
+    Buffer_Max_Size 6M
+它会在 24224 端口监听入站。这意味着，只要我们在 localhost:24224 上监听了某个 Fluent Bit 实例（我们确实监听了），任何使用 Fluentd插件的任何 Docker 容器都可以将日志输出发送到这个地址。
+在容器世界中，任何写入 stdout 或 stderr 的文本都会被 Docker 捕捉并传送到终端。这是通过 Docker 日志驱动程序配置的，默认情况下称为 "jsonfile "日志驱动程序。默认情况下，容器输出会存储到 /var/lib/docker 中的文件。我们可以选择不同的默认日志驱动程序（即使是单个容器）。
+Docker 自身集成的Fluentd 日志驱动插件，默认情况下会将流量转发到 localhost:24224。	
+
+basic@docker-agent:~/fluent-bit$ docker ps 
+CONTAINER ID   IMAGE               COMMAND                  CREATED          STATUS          PORTS                                                                                                    NAMES
+94b6c4b04ab9   nginx:1.23          "/docker-entrypoint.…"   19 seconds ago   Up 18 seconds   0.0.0.0:10241->80/tcp, :::10241->80/tcp                                                                  nginx
+aa661cc7faa2   fluent/fluent-bit   "/fluent-bit/bin/flu…"   8 minutes ago    Up 8 minutes    0.0.0.0:24220->24220/tcp, :::24220->24220/tcp, 2020/tcp, 0.0.0.0:24224->24224/tcp, :::24224->24224/tcp   fluent-bit
+basic@docker-agent:~/fluent-bit$ curl  12.0.0.40:10241
+<!DOCTYPE html>
+
+docker container logs fluent-bit |& sed -n -e '/nginx/,/.*/ p'   查看输出到fluent-bit的日志消息

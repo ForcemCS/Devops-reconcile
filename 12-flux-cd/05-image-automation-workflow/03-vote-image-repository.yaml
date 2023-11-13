@@ -1,0 +1,14 @@
+---
+#flux create image repository vote  --secret-ref=image-repository   --cert-ref   harbor-certs  --image=harbor.forcecs.com:32415/vote/vote --interval=1m   --export 
+apiVersion: image.toolkit.fluxcd.io/v1beta2
+kind: ImageRepository
+metadata:
+  name: vote
+  namespace: flux-system
+spec:
+  certSecretRef:
+    name: harbor-certs
+  image: harbor.forcecs.com:32415/vote/vote
+  interval: 1m0s
+  secretRef:
+    name: image-repository

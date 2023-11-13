@@ -1,0 +1,8 @@
+NOTE: 我的harbor chart的valumes.yaml文件使用的clusterIP的模式，没有用内部生成的ingress信息
+      然后我是手动在ingress上做的TLS 
+      TLS配置参见ingress-harbor.yaml
+      其中非常重要的是：在harbor chart的valumes.yaml文件中必须指定 externalURL: "https://harbor.forcecs.com:32415" (32415是ingress-nginx控制器服务的nodeport端口）)必须与浏览器的地址一致 不然login不成功
+helm repo add harbor https://helm.goharbor.io
+helm fetch harbor --untar=true  #拉取到本地后,根据需要修改values.yaml的值,然后再进行安装
+helm install my-harbor harbor/harbor --version 1.13.0   -f harbor/values.yaml -n harbor
+kubectl apply -f  ingress-harbor.yaml

@@ -1,0 +1,102 @@
+##基本scape健康警报：
+#  当无法抓取单个实例时发出警报。
+#  当根本无法抓取任何实例时发出警报。
+#  当演示作业的up指标不存在时发出警报。
+##针对用户可见症状的警报：
+#  对请求延迟较高的路径发出警报。
+#  对错误率较高的路径发出警报。
+---
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  labels:
+    app.kubernetes.io/part-of: kube-prometheus
+    app.kubernetes.io/version: 1.6.1
+    prometheus: k8s                 #这个不是随便写的
+    role: alert-rules
+  name: demo-service-rules
+  namespace: monitoring
+spec:
+  groups:
+  - name: demo-service-record
+    rules:
+    # Calculate and record the total request rate for each path/method combination.
+    - record: path_method:demo_api_request_duration_seconds_count:rate5m
+      expr: |
+        sum without(status, instance) (
+          rate(demo_api_request_duration_seconds_count{job="demo-service"}[5m])
+        )
+  - name: demo-service-alerts
+    rules:
+    # Alert (as a warning) when an individual instance cannot be scraped.
+    - alert: DemoServiceInstanceDown
+      expr: up{job="demo-service"} == 0
+      for: 1m
+      labels:
+        severity: warning
+      annotations:
+        title: 'Instance {{ $labels.instance }} of {{ $labels.job }} down'
+        description: 'Unable to scrape instance {{ $labels.instance }} of {{ $labels.job }}.'
+  
+    # Alert (as a critical alert) when no demo service instances at all can be scraped.
+    - alert: DemoServiceAllInstancesDown
+      expr: sum without(instance) (up{job="demo-service"}) == 0
+      for: 30s
+      labels:
+        severity: critical
+      annotations:
+        title: '{{ $labels.job }} all instances down'
+        description: 'Unable to scrape instance {{ $labels.instance }} of {{ $labels.job }}.'
+  
+    # Alert when no demo service instances are present.
+    - alert: DemoServiceAbsent
+      expr: absent(up{job="demo-service"})
+      for: 1m
+      labels:
+        severity: critical
+      annotations:
+        title: '{{ $labels.job }} is absent'
+        description: 'No instances of {{ $labels.job }} are being scraped.'
+  
+    # Alert on path/method combinations with an error rate >0.5%.
+    - alert: DemoServiceHighErrorRate
+      expr: |
+        (
+          sum without(status, instance) (
+            rate(demo_api_request_duration_seconds_count{status=~"5..",job="demo-service"}[1m])
+          )
+        /
+          sum without(status, instance) (
+            rate(demo_api_request_duration_seconds_count{job="demo-service"}[1m])
+          ) * 100 > 0.5
+        )
+      for: 1m
+      labels:
+        severity: critical
+      annotations:
+        title: 'High 5xx rate for {{ $labels.method }} on {{ $labels.path }}'
+        description: 'The 5xx error rate for path {{$labels.path}} with method {{ $labels.method }} in {{ $labels.job }} is {{ printf "%.2f" $value }}%.'
+  
+    # Alert on path/method combinations with a 99th percentile latency >200ms.
+    - alert: DemoServiceHighLatency
+      expr: |
+        histogram_quantile(
+          0.99,
+          sum without(status, instance) (
+            rate(demo_api_request_duration_seconds_bucket{job="demo-service"}[5m])
+          )
+        ) > 0.2
+      for: 1m
+      labels:
+        severity: critical
+      annotations:
+        title: 'High latency for {{ $labels.method }} on {{ $labels.path }}'
+        description: 'The 99th percentile latency for path {{$labels.path}} with method {{ $labels.method }} in {{ $labels.job }} is {{ printf "%.2f" $value }}s.'
+    - alert: DeadMansSwitch-serviceprom
+      annotations:
+        description: This is a DeadMansSwitch meant to ensure that the entire Alerting
+          pipeline is functional.
+        summary: Alerting DeadMansSwitch
+      expr: vector(1)
+      labels:
+        severity: none

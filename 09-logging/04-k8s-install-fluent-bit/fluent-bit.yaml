@@ -1,0 +1,40 @@
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: fluentbit
+  namespace: fluent-bit
+  labels:
+    k8s-app: fluentbit-logging
+    version: v1
+spec:
+  selector:
+    matchLabels:
+      k8s-app: fluentbit-logging
+      version: v1
+  template:
+    metadata:
+      labels:
+        k8s-app: fluentbit-logging
+        version: v1
+    spec:
+      terminationGracePeriodSeconds: 30   #容器优雅的退出时间 
+      tolerations:
+      - key: node-role.kubernetes.io/control-plane
+        effect: NoSchedule
+      - key: node-role.kubernetes.io/master
+        effect: NoSchedule
+      containers:
+      - name: fluent-bit
+        image: fluent/fluent-bit
+        resources:
+          requests:
+            memory: 200Mi
+          limits:
+            memory: 200Mi
+        volumeMounts:
+        - name: fluentbit-conf
+          mountPath: /fluent-bit/etc
+      volumes:
+      - name: fluentbit-conf
+        configMap:
+          name: fluentbit-config

@@ -1,0 +1,39 @@
+#在部署fluentd或者Fluent Bit之前需要进行一些系统优化（在官方文件中有配置）
+1.我们以root的用户运行fluentd,所以修改root的文件描述符即可
+  /etc/security/limits.conf中添加
+    root            hard    nofile           65536
+    root            soft    nofile           65536
+  然后重启系统
+2. 网络优化（理论部分不做说明，可以自行查阅）
+   /etc/sysctl.conf 
+     net.ipv4.tcp_tw_reuse = 1
+     net.ipv4.ip_local_port_range = 10240  65535
+#在vm上安装fluentd
+在linux上安装fluentd的方式有很多，其中有包管理工具（apt）,源码安装，Ruby库管理器 Gem
+1.安装Ruby(其实依赖的一些C环境)
+  apt-get  install -y    ruby-dev   ruby-full  libssl-dev libreadline-dev zlib1g-dev make gcc
+2.安装bundle
+  apt-get install -y    bundle
+3.Gem 安装fluentd
+  gem install  fluentd
+#探索fluentd
+1.生成默认的配置文件
+  fluentd   --setup  ./fluent
+2.配置文件说明
+3.运行
+#在vm上安装fluent bit
+1.在fluent-bit的官方github仓库下有安装脚本 install.sh  直接运行即可
+2.root@docker-agent:~# find  /     -type  f   -name  fluent-bit   
+  /opt/fluent-bit/bin/fluent-bit
+  root@docker-agent:~# ln -sv    /opt/fluent-bit/bin/fluent-bit    /usr/bin/fluent-bit   
+3.和使用其他常规的软件一样 可以运行fluent-bit  --help查看帮助
+  例如：启动的时候可以选择加载哪些插件
+  root@docker-agent:~# fluent-bit --help | grep -E "\-i|\-o|\-F"
+  -i, --input=INPUT       set an input
+  -F  --filter=FILTER     set a filter
+  -o, --output=OUTPUT     set an output
+  (-i -o -F 后边都可以跟-p来设置子选项进一步定义 //fluent-bit -i tail -p Path=/etc/os-release -p Read_from_Head=true -o stdout)
+4.配置文件
+  Fluent Bit 的配置格式与 Fluentd 不同，但总体原理相同：INPUT、FILTER和OUTPUT在各自的部分下进行配置。并通过一组参数（entry<条目>）进行配置、构成了一个部分的大部分语法。每个条目都是一个键值对，会影响插件的最终行为。
+ 
+  

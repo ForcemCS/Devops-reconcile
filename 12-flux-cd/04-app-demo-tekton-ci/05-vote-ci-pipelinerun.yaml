@@ -1,0 +1,34 @@
+---
+apiVersion: tekton.dev/v1beta1
+kind: PipelineRun
+metadata:
+  generateName: vote-ci-
+spec:
+  serviceAccountName: pipeline-gitlab
+  pipelineRef:
+    name: instavote-ci
+  podTemplate:
+    securityContext:
+      fsGroup: 65532
+  workspaces:
+  - name: shared-data
+    persistentVolumeClaim:
+      claimName: vote-pvc
+  - name: git-credentials
+    secret:
+      secretName: gitlab-credentials
+  - name: dockerconfig
+    secret:
+      secretName: docker-credentials 
+  params:
+  - name: repoUrl
+    value: http://gitlab.forcemcs.cn/flux-cd/app-demo.git
+  - name: revision
+    value: main
+  - name: sparseCheckoutDirectories
+    value: /vote/                      #如果想捡出多个，可以用逗号分隔
+  - name: imageUrl
+    value: harbor.forcecs.com:32415/vote/vote
+  - name: pathToContext                #Dockerfile所在的位置
+    value: vote
+

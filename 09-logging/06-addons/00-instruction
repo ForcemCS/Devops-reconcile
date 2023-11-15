@@ -13,4 +13,17 @@ helm install my-loki -f loki/values.yaml   grafana/loki --version 5.26.0  -n lok
 还有就是valumes文件注意的地方。请参考这两个连接[https://stackoverflow.com/questions/73205562/unable-to-add-grafana-loki-datasource-in-kubernetes]
                                                [https://stackoverflow.com/questions/76287473/configure-local-filesystem-storage-for-loki]
 
- 
+---------
+server {
+        listen 80;
+        listen [::]:80;
+
+        server_name grafana.x.xinghuihuyu.cn;
+
+        location / {
+                proxy_pass http://10.10.0.220:30889;
+                proxy_http_version 1.1;
+                proxy_set_header Host grafana.x.xinghuihuyu.cn;
+        }
+}
+--------

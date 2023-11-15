@@ -1,0 +1,17 @@
+#若想要监控ingress-nginx,可以按以下方式修改
+deploy.yaml
+...
+        - containerPort: 10254
+          name: http-metrics
+          protocol: TCP
+
+
+
+svc.yaml
+...
+  - appProtocol: http
+    name: http-metrics
+    port: 10254
+    protocol: TCP
+    targetPort: http-metrics
+-------------

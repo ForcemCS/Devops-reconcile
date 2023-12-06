@@ -1,0 +1,48 @@
+#有关重新打标签的说明
+假设日志是这样的
+---
+11.11.11.11 - frank [25/Jan/2000:14:00:01 -0500] "GET /1986.js HTTP/1.1" 200 932 "-" "Mozilla/5.0 (Windows; U; Windows NT 5.1; de; rv:1.9.1.7) Gecko/20091221 Firefox/3.5.7 GTB6"
+11.11.11.12 - frank [25/Jan/2000:14:00:02 -0500] "POST /1986.js HTTP/1.1" 200 932 "-" "Mozilla/5.0 (Windows; U; Windows NT 5.1; de; rv:1.9.1.7) Gecko/20091221 Firefox/3.5.7 GTB6"
+11.11.11.13 - frank [25/Jan/2000:14:00:03 -0500] "GET /1986.js HTTP/1.1" 400 932 "-" "Mozilla/5.0 (Windows; U; Windows NT 5.1; de; rv:1.9.1.7) Gecko/20091221 Firefox/3.5.7 GTB6"
+11.11.11.14 - frank [25/Jan/2000:14:00:04 -0500] "POST /1986.js HTTP/1.1" 400 932 "-" "Mozilla/5.0 (Windows; U; Windows NT 5.1; de; rv:1.9.1.7) Gecko/20091221 Firefox/3.5.7 GTB6
+---
+- job_name: system
+   pipeline_stages:
+   - regex:
+        expression: "^(?P<ip>\\S+) (?P<identd>\\S+) (?P<user>\\S+) \\[(?P<timestamp>[\\w:/]+\\s[+\\-]\\d{4})\\] \"(?P<action>\\S+)\\s?(?P<path>\\S+)?\\s?(?P<protocol>\\S+)?\" (?P<status_code>\\d{3}|-) (?P<size>\\d+|-)\\s?\"?(?P<referer>[^\"]*)\"?\\s?\"?(?P<useragent>[^\"]*)?\"?$"
+   - labels:
+        action:
+        status_code:
+   static_configs:
+   - targets:
+      - localhost
+     labels:
+      job: apache
+      env: dev
+      __path__: /var/log/apache.log
+	  
+会生成这样的数据流：
+{job=”apache”,env=”dev”,action=”GET”,status_code=”200”} 11.11.11.11 - frank [25/Jan/2000:14:00:01 -0500] "GET /1986.js HTTP/1.1" 200 932 "-" "Mozilla/5.0 (Windows; U; Windows NT 5.1; de; rv:1.9.1.7) Gecko/20091221 Firefox/3.5.7 GTB6"
+{job=”apache”,env=”dev”,action=”POST”,status_code=”200”} 11.11.11.12 - frank [25/Jan/2000:14:00:02 -0500] "POST /1986.js HTTP/1.1" 200 932 "-" "Mozilla/5.0 (Windows; U; Windows NT 5.1; de; rv:1.9.1.7) Gecko/20091221 Firefox/3.5.7 GTB6"
+{job=”apache”,env=”dev”,action=”GET”,status_code=”400”} 11.11.11.13 - frank [25/Jan/2000:14:00:03 -0500] "GET /1986.js HTTP/1.1" 400 932 "-" "Mozilla/5.0 (Windows; U; Windows NT 5.1; de; rv:1.9.1.7) Gecko/20091221 Firefox/3.5.7 GTB6"
+{job=”apache”,env=”dev”,action=”POST”,status_code=”400”} 11.11.11.14 - frank [25/Jan/2000:14:00:04 -0500] "POST /1986.js HTTP/1.1" 400 932 "-" "Mozilla/5.0 (Windows; U; Windows NT 5.1; de; rv:1.9.1.7) Gecko/20091221 Firefox/3.5.7 GTB6"
+
+这四条日志行将成为四个独立的流，并开始填充四个独立的块。
+
+任何符合这些标签/值组合的额外日志行将被添加到现有的流中。如果有另一个独特的标签组合进来（例如 status_code="500"），就会创建另一个新的流。
+
+现在想象一下，如果你为 ip 设置一个标签。不仅每个来自用户的请求都成为一个独特的流。每个来自同一用户的具有不同动作或状态代码的请求都将得到它自己的流。
+
+做一些简单的计算，如果有四个常见的动作（GET, PUT, POST, DELETE）和四个常见的状态代码（虽然可能不止四个！），这将是 16 个流和 16 个独立的块。现在，如果我们用一个标签来表示 ip，就把这个数字乘以每个用户。你可以很快有几千或几万个流。
+
+这会导致很高的 cardinality（基数）。会杀死 Loki。
+
+当我们谈论 cardinality 时，我们指的是标签和值的组合以及它们创造的流的数量。高 cardinality 是指使用具有大范围可能值的标签，如 ip，或结合许多标签，即使它们有一个小而有限的值集，如使用 status_code 和 action。
+
+高 cardinality 导致 Loki 建立一个巨大的索引，并将成千上万的小块冲到对象存储中
+
+相反，我们应该按照过滤表达式如下编写LogQL语法：
+{job=”apache”} |= “11.11.11.11” |= ""
+
+
+{cluster="OPS-cluster-1",namespace="loki-dev"} |= "level=debug" |= "status=200" |= "path=/api/v1/query"

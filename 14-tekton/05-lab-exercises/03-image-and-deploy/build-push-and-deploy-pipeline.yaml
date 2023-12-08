@@ -1,0 +1,70 @@
+apiVersion: tekton.dev/v1beta1
+kind: Pipeline
+metadata:
+  name: build-push-and-deploy-pipeline
+  namespace: tekton-pipelines
+spec:
+  params:
+  - name: gitrevision-tag
+  - name: charts_dir
+  - name: release_name
+  - name: release_namespace
+  - name: values_file
+  - name: tag
+  - name: repo-url
+    type: string
+  - name: image-reference
+    type: string
+
+  workspaces:
+  - name: shared-data
+  - name: gitlab-credentials
+    description: My ssh credentials
+  - name: docker-credentials
+
+  tasks:
+  - name: fetch-source
+    taskRef:
+      name: git-clone
+    workspaces:
+    - name: output
+      workspace: shared-data
+    - name: ssh-directory
+      workspace: gitlab-credentials
+    params:
+    - name: url
+      value: $(params.repo-url)
+  - name: build-push
+    runAfter: ["fetch-source"]
+    taskRef:
+      name: kaniko
+    workspaces:
+    - name: source
+      workspace: shared-data
+    - name: dockerconfig
+      workspace: docker-credentials
+    params:
+    - name: IMAGE
+      value: $(params.image-reference)
+    - name: EXTRA_ARGS
+      value: [ "--skip-tls-verify" ]
+
+  - name: deploy-to-cluster
+    runAfter: ["build-push"]
+    taskRef:
+      name: deploy-to-cluster-task
+    params:
+    - name: charts_dir
+      value: $(params.charts_dir)
+    - name: release_name
+      value: $(params.release_name)
+    - name: release_namespace
+      value: $(params.release_namespace)
+    - name: values_file
+      value: $(params.values_file)
+    - name: tag
+      value: $(params.tag)
+    workspaces:
+    - name: output
+      workspace: shared-data
+

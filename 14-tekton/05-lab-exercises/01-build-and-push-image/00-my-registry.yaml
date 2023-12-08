@@ -1,0 +1,7 @@
+apiVersion: v1
+kind: Secret
+metadata:
+  name: docker-credentials
+  namespace: tekton-pipelines
+data:
+  config.json: ewoJImF1dGhzIjogewoJCSJoYXJib3IuZm9yY2Vjcy5jb206MzI0MTUiOiB7CgkJCSJhdXRoIjogIllXUnRhVzQ2U0dGeVltOXlNVEl6TkRVPSIKCQl9Cgl9Cn0=

@@ -1,0 +1,40 @@
+apiVersion: tekton.dev/v1beta1
+kind: Task
+metadata:
+  name: deploy-to-cluster-task
+  namespace: tekton-pipelines
+  labels:
+    app.kubernetes.io/version: "0.3"
+  annotations:
+    tekton.dev/pipelines.minVersion: "0.12.1"
+    tekton.dev/categories: Deployment
+    tekton.dev/tags: helm
+    tekton.dev/platforms: "linux/amd64,linux/s390x,linux/ppc64le,linux/arm64"	
+spec:
+  params:
+  - name: charts_dir
+    description: The directory in source that contains the helm chart
+  - name: release_name
+    description: The helm release name
+    default: "nodejs-example"
+  - name: release_namespace
+    description: The helm release namespace
+    default: "default"
+  - name: values_file
+    description: "The values file to be used"
+    default: "values.yaml"
+  - name: tag
+
+  workspaces:
+  - name: output
+
+  steps:
+  - name: upgrade
+    image: docker.io/kiwigrid/gcloud-kubectl-helm
+    workingDir: /workspace/output
+    script: |
+      echo current installed helm releases
+      helm list --namespace "$(params.release_namespace)"
+      helm list -A
+      echo installing helm chart...
+      helm upgrade --install --wait --values "$(params.charts_dir)/$(params.values_file)" --set tag="$(params.tag)" --namespace "$(params.release_namespace)" "$(params.release_name)" "$(params.charts_dir)" --debug

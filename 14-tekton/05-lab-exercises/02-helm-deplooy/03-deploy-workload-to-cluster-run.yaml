@@ -1,0 +1,34 @@
+apiVersion: tekton.dev/v1beta1
+kind: PipelineRun
+metadata:
+  generateName: deploy-workload-to-cluster-run-
+  namespace: tekton-pipelines
+spec:
+  serviceAccountName: push-image
+  pipelineRef:
+    name: deploy-workload-to-cluster-pipeline
+  podTemplate:
+    securityContext:
+      fsGroup: 1001
+  workspaces:
+  - name: shared-data-dep
+    persistentVolumeClaim:
+      claimName: helm-deploy-pvc
+  - name: gitlab-credentials
+    secret:
+      secretName: gitlab-credentials
+  params:
+  - name: repo-url
+    value: http://gitlab.x.xinghuihuyu.cn/flux-cd/tekton-nodejs-sample.git
+  - name: gitrevision-tag
+    value: main 
+  - name: charts_dir
+    value: helm/nodejs-welcome
+  - name: tag
+    value: v1
+  - name: release_name
+    value: "nodejs-example"
+  - name: values_file
+    value: "values.yaml"
+  - name: release_namespace
+    value: "tekton-pipelines"

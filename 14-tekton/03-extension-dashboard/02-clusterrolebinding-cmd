@@ -1,0 +1,1 @@
+kubectl create clusterrolebinding tekton-dashboard-cronjobs-extension-binding --clusterrole=tekton-dashboard-cronjobs-extension --serviceaccount=tekton-pipelines:tekton-dashboard

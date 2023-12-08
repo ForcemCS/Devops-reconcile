@@ -1,0 +1,39 @@
+apiVersion: tekton.dev/v1beta1
+kind: PipelineRun
+metadata:
+  generateName: build-push-and-deploy-run-
+  namespace: tekton-pipelines
+spec:
+  serviceAccountName: push-image
+  pipelineRef:
+    name: build-push-and-deploy-pipeline
+  podTemplate:
+    securityContext:
+      fsGroup: 1001
+  workspaces:
+  - name: shared-data
+    persistentVolumeClaim:
+      claimName: image-deploy-pvc
+  - name: docker-credentials
+    secret:
+      secretName: docker-credentials
+  - name: gitlab-credentials
+    secret:
+      secretName: gitlab-credentials
+  params:
+  - name: repo-url
+    value: http://gitlab.x.xinghuihuyu.cn/flux-cd/tekton-nodejs-sample.git
+  - name: image-reference
+    value: harbor.forcecs.com:32415/tekton/nodejs-sample:v2
+  - name: gitrevision-tag
+    value: main 
+  - name: charts_dir
+    value: helm/nodejs-welcome
+  - name: tag
+    value: v2
+  - name: release_name
+    value: "nodejs-example"
+  - name: values_file
+    value: "values.yaml"
+  - name: release_namespace
+    value: "tekton-pipelines"

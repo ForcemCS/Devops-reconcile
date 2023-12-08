@@ -1,0 +1,110 @@
+apiVersion: v1
+kind: Secret
+metadata:
+  name: gitlab-secret1
+  namespace: tekton-pipelines
+type: Opaque
+stringData:
+  secretToken: "1234567"
+---
+apiVersion: triggers.tekton.dev/v1beta1
+kind: EventListener
+metadata:
+  name: gitlab-event-listener
+  namespace: tekton-pipelines
+spec:
+  serviceAccountName: tekton-triggers-example-sa
+  triggers:
+    - triggerRef: gitlab-listener-trigger
+  resources:
+    kubernetesResource:
+      serviceType: NodePort
+---
+apiVersion: triggers.tekton.dev/v1beta1
+kind: Trigger
+metadata:
+  name: gitlab-listener-trigger
+  namespace: tekton-pipelines
+spec:
+  interceptors:
+    - name: "verify-gitlab-payload1"
+      ref:
+        name: "gitlab"
+        kind: ClusterInterceptor
+      params:
+      - name: "secretRef"
+        value:
+            secretName: "gitlab-secret1"
+            secretKey: "secretToken"
+      - name: "eventTypes"
+        value: ["Push Hook"]			
+    - name: "CEL filter: only when PRs are opened1"
+      ref:
+        name: "cel"
+      params:
+        - name: "overlays"
+          value:
+            - key: branch_name
+              expression: "body.ref.split('/')[2]" #Here we are splitting the body.ref as it gives output "ref/head/<branch name or tag>" with "/" to grep only branch name.
+  bindings:
+    - ref: trigger-binding-intact
+  template:
+    ref: trigger-template-intact
+---
+apiVersion: triggers.tekton.dev/v1beta1
+kind: TriggerBinding
+metadata:
+  name: trigger-binding-intact
+  namespace: tekton-pipelines
+spec:
+  params:
+    - name: gitrevision-tag
+      value: $(extensions.branch_name) #the branch name that we split in trigger
+---
+apiVersion: triggers.tekton.dev/v1beta1
+kind: TriggerTemplate
+metadata:
+  name: trigger-template-intact
+  namespace: tekton-pipelines
+spec:
+  params:
+    - name: gitrevision-tag
+  resourcetemplates:
+    - apiVersion: tekton.dev/v1beta1
+      kind: PipelineRun
+      metadata:
+        generateName: trigger-build-push-and-deploy-run-
+      spec:
+        serviceAccountName: push-image
+        pipelineRef:
+          name: build-push-and-deploy-pipeline
+        podTemplate:
+          securityContext:
+            fsGroup: 1001
+        params:
+          - name: gitrevision-tag
+            value: $(tt.params.gitrevision-tag) #This value will be passed from trigger binding.
+          - name: repo-url
+            value: http://gitlab.x.xinghuihuyu.cn/flux-cd/tekton-nodejs-sample.git
+          - name: image-reference
+            value: harbor.forcecs.com:32415/tekton/nodejs-sample:v3
+          - name: charts_dir
+            value: helm/nodejs-welcome
+          - name: tag
+            value: v3
+          - name: release_name
+            value: "nodejs-example-trigger"
+          - name: values_file
+            value: "values.yaml"
+          - name: release_namespace
+            value: "tekton-pipelines"
+        workspaces:
+        - name: shared-data
+          persistentVolumeClaim:
+            claimName: triggers-pvc
+        - name: git-credentials
+          secret:
+            secretName: git-credentials
+        - name: docker-credentials
+          secret:
+            secretName: docker-credentials

@@ -1,0 +1,27 @@
+apiVersion: tekton.dev/v1beta1
+kind: PipelineRun
+metadata:
+  generateName: clone-build-push-run-
+  namespace: tekton-pipelines
+spec:
+  serviceAccountName: push-image
+  pipelineRef:
+    name: clone-build-push
+  podTemplate:
+    securityContext:
+      fsGroup: 65532
+  workspaces:
+  - name: shared-data
+    persistentVolumeClaim:
+      claimName: push-image-pvc
+  - name: docker-credentials
+    secret:
+      secretName: docker-credentials
+  - name: gitlab-credentials
+    secret:
+      secretName: gitlab-credentials
+  params:
+  - name: repo-url
+    value: http://gitlab.x.xinghuihuyu.cn/flux-cd/tekton-nodejs-sample.git
+  - name: image-reference
+    value: harbor.forcecs.com:32415/tekton/nodejs-sample:v1

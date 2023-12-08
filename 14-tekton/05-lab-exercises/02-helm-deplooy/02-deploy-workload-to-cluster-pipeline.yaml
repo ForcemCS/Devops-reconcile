@@ -1,0 +1,54 @@
+apiVersion: tekton.dev/v1beta1
+kind: Pipeline
+metadata:
+  name: deploy-workload-to-cluster-pipeline
+  namespace: tekton-pipelines
+spec:
+  params:
+  - name: gitrevision-tag
+  - name: repo-url
+    type: string
+  - name: charts_dir
+  - name: release_name
+  - name: release_namespace
+  - name: values_file
+  - name: tag
+  workspaces:
+  - name: shared-data-dep
+  - name: gitlab-credentials
+    description: My ssh credentials
+
+  tasks:
+  - name: helm-clone
+    taskRef:
+      name: git-clone
+    params:
+    - name: url
+      value: $(params.repo-url)
+
+    - name: revision
+      value: $(params.gitrevision-tag)
+    workspaces:
+    - name: output
+      workspace: shared-data-dep
+    - name: ssh-directory
+      workspace: gitlab-credentials
+
+  - name: deploy-to-cluster
+    runAfter: ["helm-clone"]
+    taskRef:
+      name: deploy-to-cluster-task
+    params:
+    - name: charts_dir
+      value: $(params.charts_dir)
+    - name: release_name
+      value: $(params.release_name)
+    - name: release_namespace
+      value: $(params.release_namespace)
+    - name: values_file
+      value: $(params.values_file)
+    - name: tag
+      value: $(params.tag)
+    workspaces:
+    - name: output
+      workspace: shared-data-dep

@@ -1,0 +1,42 @@
+kind: StorageClass
+apiVersion: storage.k8s.io/v1
+metadata:
+  name: slack
+provisioner: kubernetes.io/no-provisioner
+volumeBindingMode: WaitForFirstConsumer
+---
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: slack-pv
+spec:
+  capacity:
+    storage: 5Gi
+  volumeMode: Filesystem
+  accessModes:
+  - ReadWriteOnce
+  persistentVolumeReclaimPolicy: Delete
+  storageClassName: slack
+  local:
+    path: /root/tekton/slack
+  nodeAffinity:
+    required:
+      nodeSelectorTerms:
+      - matchExpressions:
+        - key: kubernetes.io/hostname
+          operator: In
+          values:
+          - node01
+---
+kind: PersistentVolumeClaim
+apiVersion: v1
+metadata:
+  name: slack-pvc
+  namespace: tekton-pipelines
+spec:
+  accessModes:
+  - ReadWriteOnce
+  resources:
+    requests:
+      storage: 5Gi
+  storageClassName: slack

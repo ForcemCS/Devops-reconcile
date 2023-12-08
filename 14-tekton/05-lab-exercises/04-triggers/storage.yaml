@@ -1,0 +1,42 @@
+kind: StorageClass
+apiVersion: storage.k8s.io/v1
+metadata:
+  name: triggers
+provisioner: kubernetes.io/no-provisioner
+volumeBindingMode: WaitForFirstConsumer
+---
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: triggers-pv
+spec:
+  capacity:
+    storage: 1Gi
+  volumeMode: Filesystem
+  accessModes:
+  - ReadWriteOnce
+  persistentVolumeReclaimPolicy: Delete
+  storageClassName: triggers
+  local:
+    path: /root/tekton/triggers
+  nodeAffinity:
+    required:
+      nodeSelectorTerms:
+      - matchExpressions:
+        - key: kubernetes.io/hostname
+          operator: In
+          values:
+          - node01
+---
+kind: PersistentVolumeClaim
+apiVersion: v1
+metadata:
+  name: triggers-pvc
+  namespace: tekton-pipelines
+spec:
+  accessModes:
+  - ReadWriteOnce
+  resources:
+    requests:
+      storage: 1Gi
+  storageClassName: triggers

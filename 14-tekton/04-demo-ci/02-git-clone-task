@@ -1,0 +1,2 @@
+#kubectl apply -f https://raw.githubusercontent.com/tektoncd/catalog/main/task/git-clone/0.9/git-clone.yaml -n tekton-pipelines
+#如果 Git 存储库是私有的或需要使用用户名和密码进行身份验证

@@ -1,0 +1,41 @@
+apiVersion: tekton.dev/v1beta1
+kind: Pipeline
+metadata:
+  name: git-clone-notification
+  namespace: tekton-pipelines
+spec:
+  params:
+  - name: gitrevision-tag
+  workspaces:
+  - name: shared-data
+    description: |
+      This workspace will receive the cloned git repo and be passed
+      to the next Task for the repo's README.md file to be read.
+  - name: git-credentials
+    description: My ssh credentials
+  tasks:
+  - name: fetch-repo
+    taskRef:
+      name: git-clone
+    params:
+      - name: url
+        value: http://gitlab.x.xinghuihuyu.cn/server/config_new.git
+      - name: revision
+        value: $(params.gitrevision-tag)
+    workspaces:
+    - name: output
+      workspace: shared-data
+    - name: ssh-directory
+      workspace: git-credentials
+
+  - name: send-notification
+    runAfter: ["fetch-repo"]
+    taskRef:
+      name: send-to-channel-slack
+    params :
+      #- name: token-secret
+      #  value: token-secret
+      #- name: channel
+      #  value: { CHANNEL ID }
+      - name: message
+        value: "Git cloned $(params.gitrevision-tag) branch "

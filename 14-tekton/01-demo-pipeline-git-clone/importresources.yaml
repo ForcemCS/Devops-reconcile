@@ -1,0 +1,155 @@
+apiVersion: tekton.dev/v1
+kind: PipelineRun
+metadata:
+  labels:
+    dashboard.tekton.dev/import: "true"
+    gitOrg: tektoncd
+    gitRepo: dashboard
+    gitServer: github.com
+    tekton.dev/pipeline: import-resources-1701592315951
+  name: run-1701593778602
+  namespace: tekton-pipelines
+spec:
+  params:
+  - name: method
+    value: apply
+  - name: path
+    value: docs/tutorial
+  - name: repositoryURL
+    value: https://github.com/tektoncd/dashboard
+  - name: revision
+    value: main
+  - name: target-namespace
+    value: tekton-pipelines
+  pipelineSpec:
+    params:
+    - default: apply
+      description: Which kubectl command to use to import the resources (apply / create)
+      name: method
+      type: string
+    - default: .
+      description: The path from which resources are to be imported
+      name: path
+      type: string
+    - description: The URL of the git repository from which resources are to be imported
+      name: repositoryURL
+      type: string
+    - default: ""
+      description: The git revision from which resources are to be imported
+      name: revision
+      type: string
+    - default: tekton-pipelines
+      description: The namespace in which to create the resources being imported
+      name: target-namespace
+      type: string
+    tasks:
+    - name: fetch-repo
+      params:
+      - name: repositoryURL
+        value: $(params.repositoryURL)
+      - name: revision
+        value: $(params.revision)
+      taskSpec:
+        metadata: {}
+        params:
+        - description: The URL of the git repository from which resources are to be
+            imported
+          name: repositoryURL
+          type: string
+        - description: The git revision to clone
+          name: revision
+          type: string
+        spec: null
+        steps:
+        - computeResources: {}
+          env:
+          - name: PARAM_URL
+            value: $(params.repositoryURL)
+          - name: PARAM_REVISION
+            value: $(params.revision)
+          - name: WORKSPACE_PATH
+            value: $(workspaces.repo.path)
+          image: cgr.dev/chainguard/git:latest@sha256:2c70afb3b34ca5feab37c5826c32dae6e0c48549486fdf6be93faf928b658efe
+          name: clone
+          script: |
+            #!/usr/bin/env sh
+            set -eu
+            git config --global init.defaultBranch main
+            git config --global --add safe.directory "${WORKSPACE_PATH}"
+            cd "${WORKSPACE_PATH}"
+            git init
+            git remote add origin "${PARAM_URL}"
+            git fetch --depth=1 --recurse-submodules=yes origin "${PARAM_REVISION}"
+            git reset --hard FETCH_HEAD
+            git submodule update --init --recursive
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+              - ALL
+        workspaces:
+        - name: repo
+      workspaces:
+      - name: repo
+        workspace: repo
+    - name: import-resources
+      params:
+      - name: path
+        value: $(params.path)
+      - name: target-namespace
+        value: $(params.target-namespace)
+      - name: method
+        value: $(params.method)
+      runAfter:
+      - fetch-repo
+      taskSpec:
+        metadata: {}
+        params:
+        - description: The path from which resources are to be imported
+          name: path
+          type: string
+        - description: The namespace in which to create the resources being imported
+          name: target-namespace
+          type: string
+        - description: Which kubectl command to use to import the resources (apply
+            / create)
+          name: method
+          type: string
+        spec: null
+        steps:
+        - args:
+          - $(params.method)
+          - -f
+          - $(workspaces.repo.path)/$(params.path)
+          - -n
+          - $(params.target-namespace)
+          command:
+          - kubectl
+          computeResources: {}
+          image: lachlanevenson/k8s-kubectl:latest
+          name: import
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+              - ALL
+        workspaces:
+        - name: repo
+      workspaces:
+      - name: repo
+        workspace: repo
+  taskRunTemplate:
+    podTemplate:
+      securityContext:
+        runAsGroup: 65532
+        runAsNonRoot: true
+        runAsUser: 65532
+        seccompProfile:
+          type: RuntimeDefault
+    serviceAccountName: tekton-dashboard
+  timeouts:
+    pipeline: 1h0m0s
+  workspaces:
+  - name: repo
+    persistentVolumeClaim:
+      claimName: pipelinerun-pvc

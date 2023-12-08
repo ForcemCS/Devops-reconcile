@@ -1,0 +1,1 @@
+#kubectl create secret docker-registry harbor-secret --docker-server="https://harbor.forcecs.com:32415/" --docker-username=admin --docker-password=Harbor12345 -n=tekton-pipelines

@@ -5,4 +5,4 @@ extendedKeyUsage = serverAuth
 subjectAltName = @alt_names
 
 [alt_names]
-DNS.1=lb-rj0l4baf-zc9g164t8j7pamlq.clb.ap-shanghai.tencentclb.com
+DNS.1=xxxx.com

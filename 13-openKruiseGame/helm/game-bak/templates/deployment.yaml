@@ -17,7 +17,7 @@ spec:
         {{- include "roh5server.selectorLabels" . | nindent 8 }}
         game-svc: "game-svc-{{ .Values.env.SID }}"
       annotations:
-        eks.tke.cloud.tencent.com/registry-insecure-skip-verify: "lb-rj0l4baf-zc9g164t8j7pamlq.clb.ap-shanghai.tencentclb.com:5000"
+        eks.tke.cloud.tencent.com/registry-insecure-skip-verify: "xxxx.com:5000"
     spec:
       imagePullSecrets:
       - name: auth-registry-secret

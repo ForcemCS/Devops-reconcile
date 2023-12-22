@@ -45,7 +45,7 @@ spec:
       labels:
         app.kubernetes.io/name: roh5server
       annotations:
-        eks.tke.cloud.tencent.com/registry-insecure-skip-verify: "lb-rj0l4baf-zc9g164t8j7pamlq.clb.ap-shanghai.tencentclb.com:5000"
+        eks.tke.cloud.tencent.com/registry-insecure-skip-verify: "xxxx.com:5000"
     spec:
       imagePullSecrets:
       - name: auth-registry-secret
@@ -65,7 +65,7 @@ spec:
           mountPath: /opt
       containers:
       - name: roh5server-game
-        image: "lb-rj0l4baf-zc9g164t8j7pamlq.clb.ap-shanghai.tencentclb.com:5000/k8s-roh5server:v6"
+        image: "xxxx.com:5000/k8s-roh5server:v6"
         imagePullPolicy: Always
         command: ['bash', '-c']
         args:

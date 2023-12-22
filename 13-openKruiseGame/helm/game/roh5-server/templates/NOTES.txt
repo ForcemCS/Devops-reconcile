@@ -3,7 +3,7 @@
 应用的发布是通过腾讯云的Ingress实现的（Controller已经部署到集群中）:
 
    1.通过域名进行测试：
-     curl -k -H "Host: {{ .Values.host.roh5server }}"  http://lb-nsmn26mh-dms8rhg4vu7t2aqn.clb.ap-shanghai.tencentclb.com
+     curl -k -H "Host: {{ .Values.host.roh5server }}"  http://xxxxxxxxxxxx.com
    
    2.或者通过一个Pod进行测试(一次测试单个服):
    

@@ -5,6 +5,9 @@ kind: Ingress
 metadata:
   name: {{ include "roh5server.fullname" $global }}-{{ $value   }}-ingress
   namespace: roh5server
+  annotations:
+    # URL重定向。
+    nginx.ingress.kubernetes.io/rewrite-target: /$2
 spec:
   ingressClassName: {{ $global.Values.ingressClassName}}
   rules:
@@ -18,5 +21,12 @@ spec:
               number: 10003
         path: /s{{ $value   }}(/|$)(.*)
         pathType: ImplementationSpecific
+      - backend:
+          service:
+            name: {{ include "roh5server.fullname" $global }}-svc-{{ $value   }}
+            port:
+              number: 10003
+        path: /
+        pathType: Prefix
 ---
 {{- end }}

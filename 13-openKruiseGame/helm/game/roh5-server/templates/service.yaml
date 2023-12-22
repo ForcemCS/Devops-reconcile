@@ -1,0 +1,34 @@
+{{ $global := . }}
+{{- range $key, $value := .Values.env.SID }}
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "roh5server.fullname" $global }}-svc-{{ $value   }}
+  namespace: roh5server
+  labels:
+    {{- include "roh5server.labels" $global | nindent 4 }}-{{ $value   }}
+    game-svc: "game-svc-{{ $value   }}"
+spec:
+  type: {{ $global.Values.service.type }}
+  ports:
+  - name: "game-svc-1"
+    port: 10002
+    protocol: TCP
+    targetPort: 10002
+  - name: "game-svc-2"
+    port: 10003
+    protocol: TCP
+    targetPort: 10003
+  - name: "game-svc-3"
+    port: 10004
+    protocol: TCP
+    targetPort: 10004
+  - name: "game-svc-4"
+    port: 10007
+    protocol: TCP
+    targetPort: 10007
+  selector:
+    {{- include "roh5server.selectorLabels" $global | nindent 4 }}-{{ $value    }}
+    game-svc: "game-svc-{{ $value   }}"
+---
+{{- end}}

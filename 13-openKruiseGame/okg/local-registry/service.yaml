@@ -1,0 +1,15 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: registry-service
+  namespace: roh5server
+spec:
+  selector:
+    app: registry
+  ports:
+  - name: registry-service-port
+    protocol: TCP
+    port: 5000
+    nodePort: 31745
+    targetPort: registry-port
+  type: LoadBalancer

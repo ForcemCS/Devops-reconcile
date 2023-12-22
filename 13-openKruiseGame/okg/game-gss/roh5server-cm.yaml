@@ -1,0 +1,41 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: roh5server-cm
+  namespace: roh5server
+data:
+  # 类文件键
+  main_logic_real: |
+    SID = $SID
+    SERVER_IP = '10.0.4.10'
+    CENTRE_IP = "10.0.4.10"
+    CENTRE_PORT = 80
+    DEBUG = true
+    LOGIN_NO_AUTH = 1
+    --OPEN_GM_FUNC = 1
+    --[REDIS]--
+    REDIS_IP = "10.10.0.25"
+    REDIS_PORT = 6379
+    REDIS_AUTH = "zxc,./123"
+    REDIS_DB = 0
+    REDIS_IP_CHAT='10.10.0.25'
+    REDIS_PORT_CHAT=6379
+    REDIS_AUTH_CHAT='zxc,./123'
+    REDIS_DB_CHAT=1
+    --[MYSQL]--
+    MYSQL_IP = "124.223.188.144"
+    MYSQL_PORT = 13306
+    MYSQL_USER = "root"
+    MYSQL_PASSWORD = "com.012"
+    --[OTHER]--
+    use_print_msg_context = "use"
+    log_debug_msg_flag='req|resp'
+    include "main_logic"
+  start.sh: |
+    #!/bin/bash
+    
+    SID=$(cat /opt/pod.txt)  
+    
+    echo "export  SID=$SID"  >> /etc/profile  &&   source  /etc/profile
+    
+    /usr/data/bin/skynet/skynet  main_logic_real 

@@ -1,0 +1,24 @@
+# 这是一个yaml格式的文件
+# 声明变量以传入templates
+image:
+  repo: xxxxxxxxxxxxxxxxxxxxxxxcom:5000/k8s-roh5server
+  #初始值为v6,可以覆盖
+  tag: v6
+
+env:
+  SID: 
+  - 99030
+  - 99031
+
+replicas: 1
+
+
+service:
+  type: ClusterIP
+
+ingressClassName: roh5server
+
+host:
+  roh5server: roh5server.k8s.com
+  ro3-micro: ro3micro.k8s.com
+

@@ -1,0 +1,85 @@
+apiVersion: game.kruise.io/v1alpha1
+kind: GameServerSet  
+metadata:
+  name: roh5server-9903
+  namespace: roh5server
+  labels:
+    app.kubernetes.io/name: roh5server
+spec:
+  replicas: 1
+  updateStrategy:
+    rollingUpdate:
+      podUpdatePolicy: InPlaceIfPossible
+  network:
+    networkConf:
+    - name: IngressClassName
+      value: roh5server
+    - name: Port
+      value: "10003"
+    - name: Path
+      value: /s9003<id>(/|$)(.*)
+    - name: Host
+      value: roh5server.k8s.com
+    - name: PathType
+      value: ImplementationSpecific
+    - name: Port
+      value: "10002"
+    - name: Port
+      value: "10004"
+    - name: Port
+      value: "10007"
+        #- name: TlsHosts
+        #value: sandbox.k8s.xinghuihuyu.cn
+        #- name: TlsSecretName
+        #value: sandbox-k8s-secret
+    - name: Annotation
+      value: 'nginx.ingress.kubernetes.io/rewrite-target: /$2'
+    - name: Annotation
+      value: 'nginx.ingress.kubernetes.io/use-regex: "true"'
+        #- name: Annotation
+        #value: 'kubernetes.io/ingress.existLbId: lb-5uews4fb'
+
+    networkType: Kubernetes-Ingress
+  gameServerTemplate:
+    metadata:
+      labels:
+        app.kubernetes.io/name: roh5server
+      annotations:
+        eks.tke.cloud.tencent.com/registry-insecure-skip-verify: "<rep_url>:<port>"
+    spec:
+      imagePullSecrets:
+      - name: auth-registry-secret
+      containers:
+      - name: roh5server-game
+        image: "<rep_url>:<port>/k8s-roh5server:v4"
+        imagePullPolicy: Always
+        env:
+        #  - name: DEBUG
+        #    value: "true"
+        #  - name: GM
+        #    value: "1"
+        #  - name: SID
+        #    value: "99050"
+        ports:
+        - name: server1
+          containerPort: 10002
+        - name: server2
+          containerPort: 10003
+        - name: server3
+          containerPort: 10004
+        - name: server4
+          containerPort: 10007
+        volumeMounts:
+        - name: config
+          mountPath: "/usr/data/svr/main_logic_real"
+          subPath: main_logic_real
+          readOnly: false
+      volumes:
+      - name: config
+        configMap:
+          # 提供你想要挂载的 ConfigMap 的名字
+          name: roh5server-cm 
+          # 来自 ConfigMap 的一组键，将被创建为文件
+          items:
+          - key: "main_logic_real"
+            path: "main_logic_real"

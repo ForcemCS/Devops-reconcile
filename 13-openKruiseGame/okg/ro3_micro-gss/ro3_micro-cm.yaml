@@ -1,0 +1,62 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: ro3-micro-cm
+  namespace: roh5server
+data:
+  # 类文件键
+  config.yaml: |    
+    db1:
+      mysql_host: 124.223.188.144
+      mysql_port: 13306
+      mysql_user: root
+      mysql_pass: com.012
+    
+    db2:
+      mysql_host: 124.223.188.144
+      mysql_port: 13306
+      mysql_user: root
+      mysql_pass: com.012
+    
+    jwt_key_primary: d7444d895d11ab98ff998e3f9b94195e
+    jwt_key_secondary: d7444d895d11ab98ff998e3f9b94195e
+    
+    service:
+      innersdk:
+        # 发货服务地址 (不同sdk方需要由这个类似地址去做适配)
+        recharge_url: http://ro3-micro.k8s.com/api/recharge/inner              
+      ro3:
+        # 认证与支付接口
+        sdk_url: http://ro3-micro.k8s.com/jsonrpc                                                
+        # innersdk专用参数 (客户端使用提交)
+        inner_sdk_url: http://ro3-micro.roh5server.svc.cluster.local:18000/jsonrpc                               
+        # 转发服地址
+        trans_url: roh5server.k8s.com                                                         # 10003
+    
+    sdk:
+      inner:
+        # 认证校验接口
+        check_url: ro3-micro.roh5server.svc.cluster.local:18000/jsonrpc
+      kingnet:
+        app_id: 300142
+        app_key: AZcrD3yCj6WGTh24GCFxTiQn8enX6CKcRm1vm5T8Qy2qrdst
+        check_url: https://user.ragnarokrevival.com/open/auth/checkStatus
+    
+    # 服务器api接口地址
+    server:
+      api_url: http://game-roh5server-9903-0.roh5server.svc.cluster.local:10002/s$<SID>
+    
+    redis:
+      host: 10.10.0.25
+      port: 6379
+      db: 13
+      auth: zxc,./123
+      
+      
+    
+
+
+
+
+
+

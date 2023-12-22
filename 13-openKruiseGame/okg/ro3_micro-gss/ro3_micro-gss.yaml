@@ -1,0 +1,71 @@
+apiVersion: game.kruise.io/v1alpha1
+kind: GameServerSet  
+metadata:
+  name: ro3-micro
+  namespace: roh5server
+  labels:
+    app.kubernetes.io/name: ro3-micro
+spec:
+  replicas: 1
+  updateStrategy:
+    rollingUpdate:
+      podUpdatePolicy: InPlaceIfPossible
+  network:
+    networkConf:
+    - name: IngressClassName
+      value: roh5server
+    - name: Port
+      value: "18000"
+    - name: Path
+      value: /
+    - name: Host
+      value: ro3micro.k8s.xinghuihuyu.cn
+    - name: PathType
+      value: Prefix
+    #- name: TlsHosts
+    #  value: ro3micro.k8s.xinghuihuyu.cn
+    #- name: TlsSecretName
+    #  value: ro3micro-k8s-secret
+    #- name: Annotation
+    #  value: 'nginx.ingress.kubernetes.io/rewrite-target: /$2'
+    #- name: Annotation
+    #  value: 'nginx.ingress.kubernetes.io/use-regex: "true"'
+    - name: Annotation
+      value: 'nginx.ingress.kubernetes.io/rewrite-target: /'
+    networkType: Kubernetes-Ingress
+  gameServerTemplate:
+    metadata:
+      labels:
+        app.kubernetes.io/name: ro3-micro
+      annotations:
+        eks.tke.cloud.tencent.com/registry-insecure-skip-verify: "<rep_url>:<port>"
+    spec:
+      imagePullSecrets:
+      - name: auth-registry-secret
+      containers:
+      - name: ro3-micro
+        image: "<rep_url>:<port>/k8s-ro3-micro:v1"
+        imagePullPolicy: Always
+        env:
+        #  - name: DEBUG
+        #    value: "true"
+        #  - name: GM
+        #    value: "1"
+        #  - name: SID
+        #    value: "99050"
+        ports:
+        - name: server1
+          containerPort: 18000
+        volumeMounts:
+        - name: config
+          mountPath: "/workdir/config.yaml"
+          subPath: "config.yaml"
+      volumes:
+      - name: config
+        configMap:
+          # 提供你想要挂载的 ConfigMap 的名字
+          name: ro3-micro-cm 
+          # 来自 ConfigMap 的一组键，将被创建为文件
+          items:
+          - key: "config.yaml"
+            path: "config.yaml"

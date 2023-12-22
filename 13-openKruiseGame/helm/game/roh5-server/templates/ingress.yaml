@@ -1,0 +1,22 @@
+{{ $global := . }}
+{{- range $key, $value := .Values.env.SID }}
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: {{ include "roh5server.fullname" $global }}-{{ $value   }}-ingress
+  namespace: roh5server
+spec:
+  ingressClassName: {{ $global.Values.ingressClassName}}
+  rules:
+  - host: {{ $global.Values.host.roh5server }}
+    http:
+      paths:
+      - backend:
+          service:
+            name: {{ include "roh5server.fullname" $global }}-svc-{{ $value   }}
+            port:
+              number: 10003
+        path: /s{{ $value   }}(/|$)(.*)
+        pathType: ImplementationSpecific
+---
+{{- end }}

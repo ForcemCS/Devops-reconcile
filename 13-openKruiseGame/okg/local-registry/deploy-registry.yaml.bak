@@ -1,0 +1,59 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: registry
+  labels:
+    app: registry
+  namespace: roh5server
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: registry
+  template:
+    metadata:
+      labels:
+        app: registry
+    spec:
+      initContainers:
+        - name: auth
+          image: httpd:2
+          command:
+            - "/bin/sh"
+            - "-c"
+          args:
+            - htpasswd
+            - -Bbn
+            - local
+            - local.com123
+	    - " > htpasswd"
+          volumeMounts:
+            - name: data
+              mountPath: /auth
+
+      containers:
+        - name: registry
+          image: registry:2
+          env:
+          - name: REGISTRY_AUTH
+            value: "htpasswd"
+          - name: REGISTRY_AUTH_HTPASSWD_REALM
+            value: "Registry Realm"
+		  - name: REGISTRY_AUTH_HTPASSWD_PATH
+		    value: /auth/htpasswd
+          - name: REGISTRY_HTTP_TLS_CERTIFICATE
+            valueFrom:
+              secretKeyRef:
+                name: registry-tls-secret
+                key: tls.crt
+          - name: REGISTRY_HTTP_TLS_KEY
+            valueFrom:
+              secretKeyRef:
+                name: registry-tls-secret
+                key: tls.key
+          volumeMounts:
+            - name: data
+              mountPath: /auth
+  volumes:
+    - name: data
+      emptyDir: {}

@@ -1,0 +1,8 @@
+apiVersion: v1
+kind: Secret
+metadata:
+  name: auth-registry-secret
+  namespace: roh5server
+data:
+  .dockerconfigjson: ewoJImF1dGhzIjogewoJCSJsYi1yajBsNGJhZi16YzlnMTY0dDhqN3BhbWxxLmNsYi5hcC1zaGFuZ2hhaS50ZW5jZW50Y2xiLmNvbTo1MDAwIjogewoJCQkiYXV0aCI6ICJiRzlqWVd3NmJHOWpZV3d1WTI5dE1USXoiCgkJfQogICAgfQp9
+type: kubernetes.io/dockerconfigjson

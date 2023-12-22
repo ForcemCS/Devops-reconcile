@@ -1,0 +1,27 @@
+- apiVersion: networking.k8s.io/v1
+  kind: Ingress
+  metadata:
+    annotations:
+      kubernetes.io/ingress.existLbId: lb-5uews4fb
+    name: game-roh5server-10003
+    namespace: roh5server
+  spec:
+    ingressClassName: roh5server
+    rules:
+    - host: roh5server.k8s.com
+      http:
+        paths:
+        - backend:
+            service:
+              name: game-roh5server-9903-0
+              port:
+                number: 10003
+          path: /s90030(/|$)(.*)
+          pathType: ImplementationSpecific
+  status:
+    loadBalancer:
+      ingress:
+      - hostname: lb-nsmn26mh-dms8rhg4vu7t2aqn.clb.ap-shanghai.tencentclb.com
+kind: List
+metadata:
+  resourceVersion: ""

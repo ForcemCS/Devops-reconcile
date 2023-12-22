@@ -1,0 +1,18 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: {{ include "roh5server.fullname" . }}-ingress
+  namespace: roh5server
+spec:
+  ingressClassName: {{ .Values.ingressClassName}}
+  rules:
+  - host: {{ .Values.host.roh5server }}
+    http:
+      paths:
+      - backend:
+          service:
+            name: {{ include "roh5server.fullname" . }}
+            port:
+              number: 10003
+        path: /{{ .Values.env.SID }}(/|$)(.*)
+        pathType: ImplementationSpecific

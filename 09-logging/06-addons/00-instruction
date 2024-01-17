@@ -1,4 +1,5 @@
 #loki的安装及其说明请参考https://hackernoon.com/grafana-loki-architecture-summary-and-running-in-kubernetes（或者官网的文档）
+                       https://github.com/grafana/helm-charts/tree/main/charts/loki-distributed
 helm repo add grafana https://grafana.github.io/helm-charts 
  
 helm fetch  grafana/loki   --untar=true 

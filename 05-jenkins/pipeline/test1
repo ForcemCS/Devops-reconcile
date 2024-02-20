@@ -26,7 +26,7 @@ pipeline {
 		
 		HelmChartTxcloud="http://gitlab.x.xinghuihuyu.cn/helm-chart/txcloud.git"
 
-		registryUri="https://lb-etkxh0j3-azlwq5ic9dpkotm4.clb.ap-shanghai.tencentclb.com:5000/"
+		registryUri="https://lb-etkxh0j3-azlwq5ic9dpkotm4.cxxxxxxxxxxxxxxxxxxxxxxxxxxxx/"
 		imageProject="txcloud-roh5server"
 		registryCredential="txcloud-registry-auth"
 		

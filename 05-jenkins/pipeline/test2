@@ -1,0 +1,79 @@
+pipeline {
+
+    agent {
+        node {
+            label 'txcloud-helm'
+        }
+    }
+	
+    parameters {
+
+		string(name: 'ImageVersion', defaultValue: 'none', description:'【请在企业微信中复制，请注意配置表版本！！】', trim: true)
+		choice(name: 'Author', choices: [ '付思杰', '杨宵培', '小志'], description: '【请选择此次发布者】')
+    }
+    options {
+        // Timeout counter starts AFTER agent is allocated
+        timeout(time: 5, unit: 'MINUTES')
+    }
+
+    environment{		
+		HelmChartTxcloud="http://gitlab.x.xinghuihuyu.cn/helm-chart/txcloud.git"
+
+		registryUri="https://lb-etkxh0j3-xxxxxxxxxxxxxxai.tencentclb.com:5000/"
+		imageProject="roh5server"
+		registryCredential="txcloud-registry-auth"
+		
+    }
+    stages {
+		
+
+        stage ('Clone Helm Chart') {
+            steps{
+                git branch: 'main', credentialsId: 'global-gitlab', url: "${HelmChartTxcloud}"
+                
+            }
+        }
+        
+        stage('Update-manifests') {
+		
+        	steps {
+        	        sh 'sed  -i "s/en:v24/$ImageVersion/"         install.yaml'
+		    }
+		}
+		
+        stage('Deploy To Txcloud') {
+            
+            /**
+            input{
+                message    "我们是否继续发布?"
+                ok         "Yes, we should."
+                parameters {
+                    string(name: 'Author', defaultValue: '付思杰', description: '请输入发布者的名字')
+                }                    
+            }
+            */
+                
+
+            steps {
+                script {
+                    def run_status = sh (
+                        script: """
+						        echo $Author
+						        
+						        kubectl  delete  -f install.yaml  && kubectl  apply  -f install.yaml
+						        
+                                """,
+                            returnStatus:true
+                    )
+                    print run_status
+                    // 失败强制退出
+                    if (run_status != 0) {
+                        print '部署失败，请检查具体原因'
+                        sh 'exit 1'
+                    }
+                    }
+                }
+            }
+    }
+	
+}

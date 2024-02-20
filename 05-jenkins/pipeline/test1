@@ -1,0 +1,140 @@
+pipeline {
+    agent {
+        node {
+            label 'vm-jnlp-agent'
+            //customWorkspace '/some/other/path'
+        }
+    }
+	
+    parameters {
+
+        choice(name: 'ServerBranch',  choices: [ 'dev', 'master'], description: '请为roh5server选择分支')
+		choice(name: 'Config2Branch', choices: [ 'master', 'en'], description: '请为config2选择分支,【en】为英文版,【master】为中文版')
+		string(name: 'DefaultBranch', defaultValue: 'master', description:'默认分支为master', trim: true)
+    }
+    options {
+        // Timeout counter starts AFTER agent is allocated
+        timeout(time: 10, unit: 'MINUTES')
+    }
+
+    environment{
+        CODEREPO="http://gitlab.x.xinghuihuyu.cn/server"
+		PROJECT1="config_new.git"
+		PROJECT2="ro5hprotobuf"
+		PROJECT3="roh5server"
+		PROJECT4="config2"
+		
+		HelmChartTxcloud="http://gitlab.x.xinghuihuyu.cn/helm-chart/txcloud.git"
+
+		registryUri="https://lb-etkxh0j3-azlwq5ic9dpkotm4.clb.ap-shanghai.tencentclb.com:5000/"
+		imageProject="txcloud-roh5server"
+		registryCredential="txcloud-registry-auth"
+		
+    }
+    stages {
+        stage('Git Checkout Servers') {
+
+            steps {
+                script {
+
+                        checkout([
+                            $class: 'GitSCM',
+                            branches: [[name: "${params.DefaultBranch}"]],
+                            extensions: [[$class: 'RelativeTargetDirectory', relativeTargetDir: 'env']],
+                            userRemoteConfigs: [
+					    	    [
+					    		    url: "${env.CODEREPO}/${env.PROJECT1}",
+					    	        credentialsId: "global-gitlab"
+					    	    ]
+					    	]
+					    ]
+					    )
+                        checkout([
+                            $class: 'GitSCM',
+                            branches: [[name: "${params.DefaultBranch}"]],
+                            extensions: [[$class: 'RelativeTargetDirectory', relativeTargetDir: 'protobuf']],
+                            userRemoteConfigs: [
+					    	    [
+					    		    url: "${env.CODEREPO}/${env.PROJECT2}",
+					    	        credentialsId: "global-gitlab"
+					    	    ]
+					    	]
+					    ]
+					    )
+                        checkout([
+                            $class: 'GitSCM',
+                            branches: [[name: "${params.ServerBranch}"]],
+                            extensions: [[$class: 'RelativeTargetDirectory', relativeTargetDir: 'server']],
+                            userRemoteConfigs: [
+					    	    [
+					    		    url: "${env.CODEREPO}/${env.PROJECT3}",
+					    	        credentialsId: "global-gitlab"
+					    	    ]
+					    	]
+					    ]
+					    )
+                        checkout([
+                            $class: 'GitSCM',
+                            branches: [[name: "${params.Config2Branch}"]],
+                            extensions: [[$class: 'RelativeTargetDirectory', relativeTargetDir: 'config']],
+                            userRemoteConfigs: [
+					    	    [
+					    		    url: "${env.CODEREPO}/${env.PROJECT4}",
+					    	        credentialsId: "global-gitlab"
+					    	    ]
+					    	]
+					    ]
+					    )						
+                    }
+            }
+        }
+		
+		
+        stage('Building image') {
+          steps{
+            script {
+              def buildArgs = """\
+                    -f /home/jenkins/build/Dockerfile-k8s \
+                    ."""
+              dockerImage = docker.build imageProject + ":v${BUILD_ID}" , buildArgs
+            }
+          }
+        }
+	    
+        stage('Push Image') {
+          steps{
+             script {
+                docker.withRegistry( registryUri, registryCredential ) {
+                dockerImage.push()
+              }
+            }
+          }
+        }
+
+        stage ('Clone Helm Chart') {
+            agent {
+                node {
+                    label 'txcloud-helm'
+                }
+            }
+            steps{
+                git branch: 'main', credentialsId: 'global-gitlab', url: "${HelmChartTxcloud}"
+                
+            }
+        }
+		
+        stage('Update-manifests') {
+            agent {
+                node {
+                    label 'txcloud-helm'
+                }
+            }
+        	steps {
+        	        sh 'sed  -i "s/k8s-roh5server/txcloud-roh5server/'  server/values.yaml'
+					sh 'sed  -i "s/tag: v45/tag: v${BUILD_ID}/"  server/values.yaml'
+        	    } 
+        	}
+        
+	
+    }
+}

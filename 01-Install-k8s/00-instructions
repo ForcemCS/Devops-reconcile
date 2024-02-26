@@ -13,3 +13,6 @@ cd existing_repo
 git remote add origin git@gitlab.xxxxxxxxxx.com:fluxcd/serverall.git 
 git branch -M main
 git push -uf origin main
+---
+#base64 file
+base64 -w  0  config.json

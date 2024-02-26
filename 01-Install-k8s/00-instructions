@@ -1,4 +1,4 @@
-#apt install -y lrzsz unzip  net-tools  iputils-ping  ufw   policycoreutils jq  cron  ntpdate bash-completion
+#apt install -y lrzsz unzip  net-tools  iputils-ping  ufw   policycoreutils jq  cron  ntpdate bash-completion  dnsutils
 kubeadm部署集群的方式可以查看官方文档，有很详细的说明
 ------
 # 删除软件及其配置文件

@@ -1,0 +1,52 @@
+pipeline {
+    agent any
+    parameters {
+
+		string(name: 'ImageVersion', defaultValue: 'none', description:'【请在企业微信中复制，请注意配置表版本！！】', trim: true)
+		choice(name: 'Author', choices: [ '付思杰', '杨宵培', '小志'], description: '【请选择此次发布者】')
+    }
+    options {
+        // Timeout counter starts AFTER agent is allocated
+        timeout(time: 5, unit: 'MINUTES')
+    }
+
+    environment{		
+		HelmChartTxcloud="http://gitlab.x.xinghuihuyu.cn/helm-chart/official-release.git"
+
+		registryUri="https://lb-etkxh0jxxxxxxxxxxxxxxxxxxxxxxxxxxxxx.tencentclb.com:5000/"
+		imageProject="roh5server"
+		registryCredential="txcloud-registry-auth"
+		
+    }
+    stages {
+        stage ('Clone Helm Chart') {
+            steps{
+                git branch: 'main', credentialsId: 'global-gitlab', url: "${HelmChartTxcloud}"
+                
+            }
+        }
+        
+        stage('Update-manifests') {
+		
+        	steps {
+        	        sh 'sed  -i "s/k8s-roh5server/${imageProject}/"         server/values.yaml'
+					sh 'sed  -i "s/tag: v45/tag: $ImageVersion/"   server/values.yaml'
+		    }
+		}
+        stage('debug') {
+            steps {
+                withCredentials([
+                    file(credentialsId: 'kubeconfig', variable: 'FILE')
+                    
+                ]){
+                    
+                    sh """
+                      helm   --kubeconfig=${FILE}   list
+                      // helm 	--kubeconfig=${FILE} uninstall game && 	helm 	--kubeconfig=${FILE} install game	server	  
+                     
+                    """
+                }
+            }
+        }
+    }
+}

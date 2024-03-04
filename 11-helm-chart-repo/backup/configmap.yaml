@@ -1,0 +1,18 @@
+{{- range $key, $value := .Values.server }}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: roh5server-cm-main
+  namespace: roh5server
+data:
+  {{- $files := .Files }}
+  {{- range tuple "main_logic_real" }}
+  {{ $. }}: |
+{{ $files.Get .$ }}
+  {{- end}}
+  {{- if and  $value.gid  $value.tid}}
+  {{ $.Values.global.cm.tg |quote | nindent 2 }}
+  {{ else }}
+  {{ $.Values.global.cm.t |quote | nindent 2 }}
+  {{- end }}
+{{- end}}

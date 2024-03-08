@@ -1,0 +1,5 @@
+#对于ssh  pipeline插件的使用请参见官方说明
+ 我们可以在远程的主机之上创建一个普通的用户 并且具有sudo的权限
+ 然后： ssh-keygen -t rsa -b 4096 -m PEM
+        装生成的公钥追加到auth_key
+        然后复制私钥的内容在jenkins保存为凭据

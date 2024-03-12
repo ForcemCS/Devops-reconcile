@@ -16,3 +16,5 @@ git push -uf origin main
 ---
 #base64 file
 base64 -w  0  config.json
+#查看systemd管理的服务日志
+journalctl --since "2024-03-12 18:00:00"

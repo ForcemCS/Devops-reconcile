@@ -1,0 +1,81 @@
+pipeline {
+    agent {
+        node {
+            label 'vm-jnlp-agent'
+            //customWorkspace '/some/other/path'
+        }
+    }
+	
+    parameters {
+
+        // choice(name: 'ServerBranch',  choices: [ 'dev', 'master'], description: '请为roh5server选择分支')
+		// choice(name: 'Config2Branch', choices: [ 'master', 'en'], description: '请为config2选择分支,【en】为英文版,【master】为中文版')
+		string(name: 'DefaultBranch', defaultValue: 'master', description:'默认分支为master', trim: true)
+    }
+    options {
+        // Timeout counter starts AFTER agent is allocated
+        timeout(time: 10, unit: 'MINUTES')
+    }
+
+    environment{
+		
+		GitRepo="http://xxxxxxxxxxxx/client/qhyj_middle_proj.git"
+
+		registryUri="https://xxxxxxxxxxxxxxxxxxxb.com:5000/"
+		imageProject="middles"
+		registryCredential="txcloud-registry-auth"
+		
+    }
+    stages {
+	
+        stage ('克隆代码') {
+		
+            steps{
+                git branch: "${params.DefaultBranch}", credentialsId: 'global-gitlab', url: "${GitRepo}"
+                
+            }
+        }
+		
+		
+        stage('构建镜像') {
+          steps{
+            script {
+              def buildArgs = """\
+                    -f ./Dockerfile \
+                    ."""
+              dockerImage = docker.build imageProject + ":v${BUILD_ID}" , buildArgs
+            }
+          }
+        }
+	    
+        stage('推送镜像') {
+          steps{
+             script {
+                docker.withRegistry( registryUri, registryCredential ) {
+                dockerImage.push()
+              }
+            }
+          }
+        }
+        
+        stage('部署到腾讯云') {
+								
+          steps {
+              withCredentials([
+                  file(credentialsId: 'kubeconfig', variable: 'FILE')
+                  
+              ]){
+                  
+                  sh """					   
+		            
+                     sed  -i "s/tag: v10/tag: v${BUILD_ID}/"  middle/values.yaml
+		   
+		     helm   --kubeconfig=${FILE} uninstall  middle &&  sleep 25 && helm   --kubeconfig=${FILE} install  middle  middle  && sleep 50
+                   
+                  """
+              }
+          }
+		}
+	
+    }
+}

@@ -1,0 +1,15 @@
+data:
+  player: "3"
+  ui_name: "user-interface.properties"
+file1:
+- enemy.types=aliens,monsters
+- player.maximum-lives=5
+file2:
+- 99030:G
+- 99031
+coochart:
+  enabled: true
+  dessert: "ice cream"
+
+global:
+  salad: caesar

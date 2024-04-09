@@ -1,0 +1,4 @@
+dependencies:
+- name: "coochart"
+  condition: coochart.enabled
+  version: "0.1.x"

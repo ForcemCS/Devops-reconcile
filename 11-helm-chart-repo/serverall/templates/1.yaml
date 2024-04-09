@@ -1,0 +1,21 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ .Release.Name }}-configmap
+data:
+  myvalue: "Hello World"
+  {{- with .Values.data }}
+  player: {{ .player | default "2"  |quote }}
+  ui_name: {{ .ui_name   }}
+  {{- end }}
+  toppings: |-
+  {{-  range $key, $value :=  .Values.file2  }}
+  {{- if hasSuffix ":G" (printf "%s"  $value ) }}
+    - {{ . |quote  |replace ":G" ""}}
+  {{- end}}
+  {{- end }}
+{{- $files := .Files }}
+{{- range tuple "server_main_logic_real"  }}
+{{ . }}: |-
+{{ $files.Get . }}
+{{- end }}

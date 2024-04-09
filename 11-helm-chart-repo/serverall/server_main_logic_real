@@ -1,0 +1,9 @@
+    --BASE
+    SID = $SID
+    start = "main_logic"
+    thread = 1
+    harbor = 1
+    base_port = 10000
+    bootstrap = "snlua bootstrap"
+    standalone = "0.0.0.0:10000"
+    master = "127.0.0.1:10000"

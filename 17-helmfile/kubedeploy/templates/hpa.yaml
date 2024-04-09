@@ -1,0 +1,46 @@
+{{- if and (.Values.autoscaling.enabled) (or (eq (toString .Values.deploymentMode) "Deployment") (eq (toString .Values.deploymentMode) "Statefulset")) (not .Values.keda.enabled) }}
+{{- if .Capabilities.APIVersions.Has "autoscaling/v2" }}
+apiVersion: autoscaling/v2
+{{- else if .Capabilities.APIVersions.Has "autoscaling/v2beta2" }}
+apiVersion: autoscaling/v2beta2
+{{- else }}
+  {{- fail "ERROR: You must have autoscaling/v2 or autoscaling/v2beta2 to use HorizontalPodAutoscaler" }}
+{{- end }}
+kind: HorizontalPodAutoscaler
+metadata:
+  name: {{ include "kubedeploy.fullname" . }}
+  labels:
+    {{- include "kubedeploy.labels" . | nindent 4 }}
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    {{- if eq (toString .Values.deploymentMode) "Deployment" }}
+    kind: Deployment
+    {{- else }}
+    kind: StatefulSet
+    {{- end }}
+    name: {{ include "kubedeploy.fullname" . }}
+  minReplicas: {{ .Values.autoscaling.minReplicas | default 1 }}
+  maxReplicas: {{ .Values.autoscaling.maxReplicas | default 10 }}
+  metrics:
+    {{- with .Values.autoscaling.targetCPUUtilizationPercentage }}
+    - type: Resource
+      resource:
+        name: cpu
+        target:
+          type: Utilization
+          averageUtilization: {{ . }}
+    {{- end }}
+    {{- with .Values.autoscaling.targetMemoryUtilizationPercentage }}
+    - type: Resource
+      resource:
+        name: memory
+        target:
+          type: Utilization
+          averageUtilization: {{ . }}
+    {{- end }}
+  {{- with .Values.autoscaling.behavior }}
+  behavior:
+    {{ toYaml . | nindent 4 }}
+  {{- end }}
+{{- end }}

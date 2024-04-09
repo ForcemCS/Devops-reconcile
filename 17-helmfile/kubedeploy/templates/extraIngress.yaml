@@ -1,0 +1,61 @@
+{{- $labels := include "kubedeploy.labels" . -}}
+{{- $routePrefix := list (dict "path" "/") }}
+{{- $fullName := include "kubedeploy.fullname" . -}}
+{{- if gt (len .Values.extraIngress) 0 -}}
+{{- range $index, $ingress := .Values.extraIngress }}
+{{- $name := include "kubedeploy.extraIngressName" (list $ $ingress) -}}
+{{- $pathType := $ingress.pathType | default "ImplementationSpecific" }}
+{{- $svcPort := include "kubedeploy.ingress.defaultport" (list $ $ingress) -}}
+{{- if not (hasKey $ingress "withSSL") -}}
+{{- $_ := set $ingress "withSSL" "true" -}}
+{{- end -}}
+{{- if not (hasKey $ingress "tls") -}}
+{{- $_ := set $ingress "tls" list -}}
+{{- end -}}
+{{- if not (hasKey $ingress "hosts") -}}
+{{- fail "hosts list is required for extraIngress" -}}
+{{- end -}}
+{{- if lt (len $ingress.hosts) 1 -}}
+{{- fail "hosts list in extraIngress is empty" -}}
+{{- end -}}
+{{- if $index }}
+---
+{{- end }}
+apiVersion: {{ include "kubedeploy.ingress.apiVersion" $ }}
+kind: Ingress
+metadata:
+  name: {{ $name }}
+  labels:
+    {{- $labels | nindent 4 }}
+  {{- include "kubedeploy.ingress.annotations" (list $ $ingress) }}
+spec:
+  {{- if and $ingress.className (semverCompare ">=1.18-0" (include "kubedeploy.kubeVersion" $)) }}
+  ingressClassName: {{ $ingress.className }}
+  {{- end }}
+  {{ include "kubedeploy.ingress.tls" (list $ $ingress) }}
+  rules:
+    {{- range $ingress.hosts }}
+    - host: {{ required "host is required at ingress.hosts[].host" .host | quote }}
+      http:
+        paths:
+          {{- $paths := .paths | default $routePrefix }}
+          {{- range $p := $paths }}
+          - path: {{ $p.path | default "/" }}
+            {{- if and $pathType (semverCompare ">=1.18-0" (include "kubedeploy.kubeVersion" $)) }}
+            pathType: {{ $p.pathType | default $pathType }}
+            {{- end }}
+            backend:
+              {{- if semverCompare ">=1.19-0" (include "kubedeploy.kubeVersion" $) }}
+              service:
+                name: {{ $fullName }}
+                port:
+                  number: {{ $p.svcPort | default $svcPort }}
+              {{- else }}
+              serviceName: {{ $fullName }}
+              servicePort: {{ $p.svcPort | default $svcPort }}
+              {{- end }}
+          {{- end }}
+    {{- end }}
+
+{{ end }}
+{{- end }}

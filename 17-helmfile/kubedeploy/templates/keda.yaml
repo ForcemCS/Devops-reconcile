@@ -1,0 +1,38 @@
+{{- if and (or (eq .Values.deploymentMode "Deployment") (eq .Values.deploymentMode "Statefulset") ) .Values.keda.enabled }}
+{{- if .Capabilities.APIVersions.Has "keda.sh/v1alpha1" -}}
+apiVersion: keda.sh/v1alpha1
+kind: ScaledObject
+metadata:
+  name: {{ include "kubedeploy.fullname" . }}
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "kubedeploy.labels" . | nindent 4 }}
+  {{- with .Values.keda.scaledObject.annotations }}
+  annotations:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+spec:
+  scaleTargetRef:
+    name: {{ include "kubedeploy.fullname" . }}
+    {{- if eq .Values.deploymentMode "Statefulset" }}
+    kind: StatefulSet
+    {{- end }}
+  pollingInterval: {{ .Values.keda.pollingInterval | default 30 }}
+  cooldownPeriod: {{ .Values.keda.cooldownPeriod | default 300 }}
+  minReplicaCount: {{ .Values.keda.minReplicas | default 1 }}
+  maxReplicaCount: {{ .Values.keda.maxReplicas | default 10 }}
+  triggers:
+{{- with .Values.keda.triggers }}
+{{ toYaml . | indent 2 }}
+{{- end }}
+  advanced:
+    restoreToOriginalReplicaCount: {{ .Values.keda.restoreToOriginalReplicaCount | default false}}
+{{- if .Values.keda.behavior }}
+    horizontalPodAutoscalerConfig:
+      behavior:
+{{- with .Values.keda.behavior }}
+{{- toYaml . | nindent 8 -}}
+{{- end -}}
+{{- end -}}
+{{- end -}}
+{{- end -}}

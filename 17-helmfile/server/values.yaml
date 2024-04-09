@@ -1,0 +1,21 @@
+image:
+  repo: test.roh5server.com/roh5server
+
+
+server:
+  a1: {image: "k8s-roh5server",tag: "v14" ,start: "main_logic",   thread: 1, MAX_RPC_AGENT: 1, enabled: true}
+  a2: {image: "roh5server",tag: "202403071451-74" ,start: "main_logic",   thread: 8, MAX_RPC_AGENT: 8, enabled: true}
+
+replicas: 1
+
+
+service:
+  type: ClusterIP
+
+ingressClassName: nginx
+
+ingressTls: game-ingress-secret
+
+host:
+  roh5server: server-ol-ind.xxxxxxxxx.com 
+  ro3micro: center-ol-ind.xxxxxxxxx.com

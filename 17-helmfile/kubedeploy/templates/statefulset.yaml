@@ -1,0 +1,46 @@
+{{- if eq (toString .Values.deploymentMode) "Statefulset" }}
+{{- $fullName := include "kubedeploy.fullname" . -}}
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: {{ include "kubedeploy.fullname" . }}
+  labels:
+    {{- include "kubedeploy.labels" . | nindent 4 }}
+spec:
+  {{- if not (or .Values.autoscaling.enabled .Values.keda.enabled ) }}
+  replicas: {{ .Values.replicaCount }}
+  {{- end }}
+  selector:
+    matchLabels:
+      {{- include "kubedeploy.selectorLabels" . | nindent 6 }}
+  serviceName: {{ include "kubedeploy.fullname" . }}
+  {{- if semverCompare ">=1.22-0" (include "kubedeploy.kubeVersion" .) -}}
+  {{- with .Values.minReadySeconds }}
+  minReadySeconds: {{ . }}
+  {{- end }}
+  {{- end }}
+  template:
+    metadata:
+      {{- include "kubedeploy.annotations" . | indent 6 }}
+      labels:
+        {{- include "kubedeploy.selectorLabels" . | nindent 8 }}
+        {{- with .Values.podExtraLabels }}
+        {{ toYaml . | nindent 8 }}
+        {{- end }}
+    {{- include "kubedeploy.common.spec" . | nindent 4 }}
+
+  {{- if .Values.persistency.enabled }}
+  volumeClaimTemplates:
+    - metadata:
+        name: {{ $fullName }}
+      spec:
+        accessModes:
+        {{- range .Values.persistency.accessModes }}
+          - {{ . }}
+        {{- end }}
+        storageClassName: {{ .Values.persistency.storageClassName }}
+        resources:
+          requests:
+            storage: {{ .Values.persistency.capacity.storage }}
+  {{- end }}
+{{- end }}

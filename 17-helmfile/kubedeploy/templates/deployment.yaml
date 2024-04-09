@@ -1,0 +1,28 @@
+{{- if eq (toString .Values.deploymentMode) "Deployment" }}
+{{- $fullName := include "kubedeploy.fullname" . -}}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "kubedeploy.fullname" . }}
+  labels:
+    {{- include "kubedeploy.labels" . | nindent 4 }}
+spec:
+  {{- if not (or .Values.autoscaling.enabled .Values.keda.enabled ) }}
+  replicas: {{ .Values.replicaCount }}
+  {{- end }}
+  {{- with .Values.minReadySeconds }}
+  minReadySeconds: {{ . }}
+  {{- end }}
+  selector:
+    matchLabels:
+      {{- include "kubedeploy.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      {{- include "kubedeploy.annotations" . | indent 6 }}
+      labels:
+        {{- include "kubedeploy.selectorLabels" . | nindent 8 }}
+        {{- with .Values.podExtraLabels }}
+        {{ toYaml . | nindent 8 }}
+        {{- end }}
+    {{- include "kubedeploy.common.spec" . | nindent 4 }}
+{{- end }}

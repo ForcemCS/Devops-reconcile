@@ -1,0 +1,28 @@
+{{- if eq (toString .Values.deploymentMode) "Job" }}
+{{- $fullName := include "kubedeploy.fullname" . -}}
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: {{ include "kubedeploy.fullname" . }}
+  labels:
+    {{- include "kubedeploy.labels" . | nindent 4 }}
+spec:
+  {{- with .Values.jobspec.backoffLimit }}
+  backoffLimit: {{ . }}
+  {{- end }}
+  {{- with .Values.jobspec.parallelism }}
+  parallelism: {{ . }}
+  {{- end }}
+  {{- if semverCompare ">=1.23-0" (include "kubedeploy.kubeVersion" .) }}
+  ttlSecondsAfterFinished: {{ .Values.jobspec.ttlSecondsAfterFinished | default "300" }}
+  {{- end }}
+  template:
+    metadata:
+      {{- include "kubedeploy.annotations" . | indent 6 }}
+      labels:
+        {{- include "kubedeploy.selectorLabels" . | nindent 8 }}
+        {{- with .Values.podExtraLabels }}
+        {{ toYaml . | nindent 8 }}
+        {{- end }}
+    {{- include "kubedeploy.common.spec" . | nindent 4 }}
+{{- end }}

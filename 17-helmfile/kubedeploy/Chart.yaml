@@ -1,0 +1,19 @@
+annotations:
+  artifacthub.io/license: Apache-2.0
+apiVersion: v2
+appVersion: 1.2.2
+description: Generalized chart for deploying containerized application to Kubernetes
+  clusters
+home: https://kubedeploy.app/
+keywords:
+- application
+- kubernetes
+- deployment
+kubeVersion: '>=1.20.0-0'
+maintainers:
+- email: branko@sysbee.net
+  name: Branko Toic
+  url: https://www.sysbee.net
+name: kubedeploy
+type: application
+version: 1.2.2

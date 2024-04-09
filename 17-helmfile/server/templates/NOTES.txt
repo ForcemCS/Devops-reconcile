@@ -1,0 +1,12 @@
+** 在部署chart期间，请耐心等待,由于网络原因可能较慢 **
+
+应用的发布是通过腾讯云的Ingress实现的（Controller已经部署到集群中）:
+
+   1.通过域名进行测试：
+     curl  http://"{{ .Values.host.roh5server }}"/s99030
+   
+   2.或者通过一个Pod进行测试(一次测试单个服):
+   
+     export TestPod=$(kubectl   -n roh5server   get  pods     -o custom-columns=NAME:.metadata.name  |grep registry)
+
+     kubectl  -n roh5server  exec  -it   $TestPod   -c  registry   -- curl  {{ include "roh5server.fullname" . }}-svc-99030:10003

@@ -1,0 +1,40 @@
+{{- if eq (toString .Values.deploymentMode) "Cronjob" }}
+{{- $fullName := include "kubedeploy.fullname" . -}}
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: {{ include "kubedeploy.fullname" . }}
+  labels:
+    {{- include "kubedeploy.labels" . | nindent 4 }}
+spec:
+  schedule: "{{ required "Please define valid cronjob schedule" .Values.cronjobspec.schedule }}"
+  {{- with .Values.cronjobspec.startingDeadlineSeconds }}
+  startingDeadlineSeconds: {{ . }}
+  {{- end }}
+  {{- with .Values.cronjobspec.successfulJobsHistoryLimit }}
+  successfulJobsHistoryLimit: {{ . }}
+  {{- end }}
+  {{- with .Values.cronjobspec.failedJobsHistoryLimit }}
+  failedJobsHistoryLimit: {{ . }}
+  {{- end }}
+	{{- with .Values.cronjobspec.concurrencyPolicy }}
+  concurrencyPolicy: {{ . }}
+  {{- end }}
+  jobTemplate:
+    spec:
+      {{- with .Values.cronjobspec.backoffLimit }}
+      backoffLimit: {{ . }}
+      {{- end }}
+      template:
+        metadata:
+        {{- with .Values.podAnnotations }}
+          annotations:
+            {{- toYaml . | nindent 12 }}
+        {{- end }}
+          labels:
+            {{- include "kubedeploy.selectorLabels" . | nindent 12 }}
+            {{- with .Values.podExtraLabels }}
+            {{ toYaml . | nindent 12 }}
+            {{- end }}
+    {{- include "kubedeploy.common.spec" . | nindent 8 }}
+{{- end }}

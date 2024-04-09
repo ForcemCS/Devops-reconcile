@@ -1,0 +1,63 @@
+environments:
+  dev:
+    values:
+    - values.yaml
+  test:
+    values:
+    - test.yaml
+  prod:
+    values:
+    - prod.yaml
+---
+templates:
+  test: &test
+    namespace: apps
+    chart: ./kubedeploy
+    version: 1.1.0
+    installed: true
+    valuesTemplate:
+      - nameOverride: '{{`{{ .Release.Name }}`}}'
+      - replicaCount: 3
+      - podDisruptionBudget:
+          enabled: true
+      - topologySpreadConstraints:
+        - maxSkew: 1
+          topologyKey: host
+          whenUnsatisfiable: ScheduleAnyway
+          labelSelector:
+            matchLabels:
+              app.kubernetes.io/instance: '{{`{{ .Release.Name }}`}}'
+      - extraSecrets:
+          - name: app-secret
+            type: Opaque
+            data:
+              username: wukui
+              password: 123456
+      - {{ .Environment.Name }}.yaml
+  prod: &prod
+    namespace: roh5server
+    chart: ./server
+    version: 1.1.0
+    installed: true
+#   valuesTemplate:
+#     - replicas: 2
+#     - {{ .Environment.Name }}.yaml
+    valuesTemplate:
+      - server:
+        {{- $lines := readFile "./game-stop.yaml" | splitList "\n" }}
+        {{- range $line := $lines }}
+          {{ $line -}}:
+            enabled: true
+        {{- end }}    
+    values:
+      - prod.yaml
+releases:
+# - name: kubedeploy
+#   <<: *test
+#   values:
+#     - replicaCount: 2
+#     - image:
+#         repository: nginx
+#         tag: xxxx
+  - name: game
+    <<: *prod

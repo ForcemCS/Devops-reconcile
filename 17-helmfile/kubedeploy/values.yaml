@@ -1,0 +1,259 @@
+
+
+
+nameOverride: ""
+
+
+fullnameOverride: ""
+
+
+kubeVersionOverride: ""
+
+
+
+deploymentMode: Deployment
+
+
+
+replicaCount: 1
+
+
+
+imagePullSecrets: []
+
+
+resources: {}
+
+
+ports: []
+
+
+env: []
+
+
+envFrom: []
+
+
+podAnnotations: {}
+
+
+podExtraLabels: {}
+
+
+podSecurityContext: {}
+
+
+securityContext: {}
+
+
+healthcheck:
+  disableAutomatic: false
+  enabled: false
+  probes:
+    livenessProbe: {}
+    readinessProbe: {}
+    startupProbe: {}
+
+
+minReadySeconds: 10
+
+
+configMaps: []
+
+
+configMapsHash: false
+
+
+extraSecrets: []
+
+
+
+
+extraVolumeMounts: []
+
+
+
+
+
+
+
+initContainers:
+  enabled: false
+  pullPolicy: IfNotPresent
+  resources: {}
+
+  containers:
+    - name: "busybox-init"
+      repository: busybox
+      tag: "latest"
+      command: ["sh", "-c", "exit 0"]
+      args: []
+      resources: {}
+
+additionalContainers:
+  enabled: false
+  pullPolicy: IfNotPresent
+  resources: {}
+
+  containers:
+    - name: "busybox-additional"
+      repository: busybox
+      tag: "latest"
+      command: ["sh", "-c", "while true; do sleep 30; done;"]
+      args: []
+      ports: []
+
+      healthcheck:
+        enabled: false
+        probes:
+          livenessProbe: {}
+          readinessProbe: {}
+          startupProbe: {}
+
+      resources: {}
+
+
+serviceAccount:
+  create: true
+  annotations: {}
+  name: ""
+
+
+podAntiAffinity: ""
+
+
+podAntiAffinityTopologyKey: kubernetes.io/hostname
+
+
+affinity: {}
+
+
+nodeSelector: {}
+
+
+topologySpreadConstraints: []
+
+
+tolerations: []
+
+image:
+  repository: nginx
+  pullPolicy: IfNotPresent
+  tag: "1.21"
+  command: []
+  args: []
+  lifecycle: {}
+  terminationGracePeriodSeconds: 30
+
+
+podDisruptionBudget:
+  enabled: false
+  minAvailable: 1
+  maxUnavailable:
+
+
+networkPolicy:
+  enabled: false
+  ingressNamespace: ingress
+  monitoringNamespace: monitoring
+  ingress: []
+  egress: []
+
+
+
+service:
+  type: ClusterIP
+  enabled: true
+  headless: false
+  ports: []
+
+
+ingress:
+  enabled: false
+  className: "haproxy"
+  pathType: ImplementationSpecific
+  withSSL: true
+  svcPort: ""
+  annotations:
+    cert-manager.io/cluster-issuer: letsencrypt
+  hosts:
+    - host: ""
+      paths: []
+
+  tls: []
+
+extraIngress: []
+
+
+monitoring:
+  enabled: false
+  labels: {}
+  targetLabels: []
+  scrapePort: metrics
+  scrapePath: /metrics
+  scrapeInterval: 20s
+  scrapeTimeout: 15s
+  scheme: http
+  tlsConfig: {}
+  metricRelabelings: []
+  relabelings: []
+
+
+autoscaling:
+  enabled: false
+  minReplicas: 1
+  maxReplicas: 10
+  targetCPUUtilizationPercentage: 80
+  targetMemoryUtilizationPercentage:
+  behavior: {}
+
+
+keda:
+  enabled: false
+  minReplicas: 1
+  maxReplicas: 10
+  pollingInterval: 30
+  cooldownPeriod: 300
+  restoreToOriginalReplicaCount: false
+  scaledObject:
+    annotations: {}
+  behavior: {}
+  triggers: []
+
+
+
+cronjobspec:
+  schedule: "0 * * * *"
+
+  restartPolicy: OnFailure
+  command: []
+  args: []
+  backoffLimit: 3
+  startingDeadlineSeconds: 180
+  successfulJobsHistoryLimit: 3
+  failedJobsHistoryLimit: 1
+  concurrencyPolicy: ""
+
+
+jobspec:
+  restartPolicy: OnFailure
+  command: []
+  args: []
+  parallelism: 1
+  backoffLimit: 3
+  ttlSecondsAfterFinished: "300"
+
+
+persistency:
+  storageClassName:
+
+  enabled: false
+  capacity:
+    storage: 5Gi
+  accessModes:
+    - ReadWriteOnce
+  mountPath: "/data"
+
+
+
+extraObjects: []

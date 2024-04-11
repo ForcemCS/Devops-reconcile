@@ -18,3 +18,8 @@ git push -uf origin main
 base64 -w  0  config.json
 #查看systemd管理的服务日志 /usr/lib/systemd/system/nginx.service
 journalctl --since "2024-03-12 18:00:00"
+---------
+#helm模板语法
+{{ if or (eq .Values.myString "") (eq .Values.myString " ") }}
+    # 字符串为空或只包含空格时执行的操作
+{{ end }}

@@ -1,0 +1,8 @@
+{{- if and (.Files.Get  "file.txt") ( eq "test" "test") }}
+{{- $lines := .Files.Lines "file.txt" -}}
+{{- range $index, $line := $lines }}
+coo: {{$line}}
+{{- end -}}
+{{- else }}
+coo: test
+{{- end }}

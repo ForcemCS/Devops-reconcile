@@ -1,0 +1,34 @@
+image:
+  repo: swr.ap-southeast-4.myhuaweicloud.com/rolegend/
+
+
+server:
+  10001: {image: "k8s-roh5server",tag: "v14" ,start: "main_logic",   thread: 1, MAX_RPC_AGENT: 1, enabled: true, isMerge: ""}
+
+    #10010: {image: "roh5server",tag: "202403071451-74" ,start: "main_logic",   thread: 1, MAX_RPC_AGENT: 1, enabled: true}
+    #10011: {image: "roh5server",tag: "202403071451-74" ,start: "main_logic",   thread: 1, MAX_RPC_AGENT: 1, enabled: true}
+
+    #10020: {image: "roh5server",tag: "202403071451-74" ,start: "main_logic",   thread: 1, MAX_RPC_AGENT: 1, enabled: true}
+    #a2: {image: "roh5server",tag: "202403071451-74" ,start: "main_logic",   thread: 8, MAX_RPC_AGENT: 8, enabled: true, isMerge: ""}
+    #a3: {image: "roh5server",tag: "202403071451-74" ,start: "main_logic",   thread: 8, MAX_RPC_AGENT: 8, enabled: true, isMerge: ""}  
+
+#下列为flight_groups
+#10100: {image: "roh5server",tag: "202403071451-74" ,start: "global_logic",   thread: 1, MAX_RPC_AGENT: 1, enabled: true}
+#10200: {image: "k8s-roh5server",tag: "v14" ,start: "global_logic",   thread: 1, MAX_RPC_AGENT: 1, enabled: true}
+
+  #10901 战斗开始
+  #10801 审核开始
+replicas: 1
+
+
+service:
+  type: ClusterIP
+
+ingressClassName: nginx
+
+ingressTls: game-ingress-secret
+
+host:
+  roh5server: server-ol-ind.ragnarokrevival.com 
+  ro3micro: center-ol-ind.ragnarokrevival.com
+

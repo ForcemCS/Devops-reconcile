@@ -1,0 +1,25 @@
+environments:
+  huawei:
+    values:
+    - hefu.yaml
+---
+templates:
+  huawei: &huawei
+    namespace: roh5server
+    chart: ./server
+    version: v1
+    installed: true
+    {{- if  isFile  "./game-stop.yaml" }}
+    valuesTemplate:
+      - server:
+        {{- $lines := readFile "./game-stop.yaml" | splitList "\n" }}
+        {{- range $line := $lines }}
+          {{  $line  | quote -}}:
+            enabled: true
+            {{ $master := exec "head" (list "./game-stop.yaml"  "-n 1") }}
+            "isMerge": {{ $master }}
+        {{- end }}
+    {{- end }}
+releases:
+  - name: game
+    <<: *huawei

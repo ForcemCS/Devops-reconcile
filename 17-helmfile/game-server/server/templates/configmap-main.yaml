@@ -1,0 +1,59 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: roh5server-cm-main
+  namespace: roh5server
+data:
+  # 类文件键
+  main_logic_real: |
+    --BASE
+    SID = $SID
+    start = "$start"
+    thread = $thread
+    MAX_RPC_AGENT = $MAXRPCAGENT
+    harbor = 1
+    base_port = 10000
+    bootstrap = "snlua bootstrap"
+    standalone = "0.0.0.0:10000"
+    master = "127.0.0.1:10000"
+    address = "127.0.0.1:10001"
+    
+    --REDIS
+    REDIS_IP = "xxxxxxxxxxx"
+    REDIS_PORT = 6379
+    REDIS_AUTH = "xxxxxxxxxDXO5jb"
+    REDIS_DB = 0
+    
+    --MYSQL
+    MYSQL_IP = "1xxxxxxxxxx"
+    MYSQL_PORT = 3306
+    MYSQL_USER = "root"
+    MYSQL_PASSWORD = "xxxxxxxxxxm7GGq4N"
+    
+    --MYSQLLOG
+    OplAddress ="logging-ro3-log-svc-11000.roh5server.svc.cluster.local:10006"
+    
+    --LOG
+    logger = "dreamlog"
+    logpath = "./log/main_logic"
+    logservice = "snlua"
+    
+    --DEBUG
+    DEBUG = true
+    runtimemode = "DEBUG"
+    
+    --OTHER
+    --OPEN_GM_FUNC = 1
+    
+    -- 主密钥用于登录支付认证
+    JWT_TOKEN_PRIMARY="d7444d895d11ab98ff998e3f9b94195e"
+    -- 次密钥用于主密钥更新, 当主密钥更新时，原主密钥变为次密钥，并在次密钥过期后删除
+    -- 过期时间: 2018-12-31 23:59:59
+    -- JWT_TOKEN_SECONDARY="d7444d895d11ab98ff998e3f9b94195e"
+    
+    -- 上报服务地址
+    --SERVICE_REPORT_URL="http://center-ro3-micro-svc.roh5server.svc.cluster.local:18000/jsonrpc"
+    SERVICE_REPORT_URL="http://xxxxxxxxx38.74:18000/jsonrpc"
+    
+    
+    include "/usr/data/bin/app/node/path.conf"

@@ -1,0 +1,30 @@
+{{ $global := . }}
+{{- range $key, $value := .Values.server }}
+{{- if $value.enabled }}
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  namespace: roh5server
+  name: {{ include "roh5server.fullname" $global }}-svcmon-{{ $key   }}
+  labels:
+    team: devops
+    prom_id: prom-d16688t5
+spec:
+  selector:
+    matchLabels:
+      {{- include "roh5server.labels" $global | nindent 6 }}
+      game-svc: "game-svc-{{ $key   }}"
+  endpoints:
+  - interval: 30s 
+    port: game-svc-4
+    path: /metrics
+    relabelings:
+    - action: replace
+      sourceLabels:  [__meta_kubernetes_pod_label_app]
+      targetLabel: application
+  namespaceSelector:
+    matchNames:
+    - roh5server
+{{- end }}
+---
+{{- end}}

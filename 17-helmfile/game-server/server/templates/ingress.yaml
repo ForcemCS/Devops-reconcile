@@ -1,0 +1,44 @@
+{{ $global := . }}
+{{- range $key, $value := .Values.server }}
+{{- if $value.enabled }}
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: {{ include "roh5server.fullname" $global }}-{{ $key   }}-ingress-10003
+  namespace: roh5server
+  annotations:
+    # URL重定向。
+    #nginx.ingress.kubernetes.io/rewrite-target: /$2
+spec:
+  ingressClassName: {{ $global.Values.ingressClassName}}
+  rules:
+  - host: {{ $global.Values.host.roh5server }}
+    http:
+      paths:
+      {{- if and ( $.Files.Get "game-hefu.yaml" ) (ne $value.isMerge "") }}
+      {{- $lines := $.Files.Lines "game-hefu.yaml" -}}
+      {{- range $index, $line := $lines }}
+      - backend:
+          service:
+            name: {{ include "roh5server.fullname" $global }}-svc-{{ $value.isMerge  }}
+            port:
+              number: 10003
+        path: /s{{ $line   }}
+        pathType: Prefix
+      {{- end -}}
+      {{- else }}
+      - backend:
+          service:
+            name: {{ include "roh5server.fullname" $global }}-svc-{{ $key   }}
+            port:
+              number: 10003
+        path: /s{{ $key   }}
+        pathType: Prefix
+      {{- end }}
+  tls:
+  - hosts:
+    - {{ $global.Values.host.roh5server }}
+    secretName: {{ $global.Values.ingressTls }}
+{{- end }}
+---
+{{- end }}

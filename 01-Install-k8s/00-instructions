@@ -23,3 +23,18 @@ journalctl --since "2024-03-12 18:00:00"
 {{ if or (eq .Values.myString "") (eq .Values.myString " ") }}
     # 字符串为空或只包含空格时执行的操作
 {{ end }}
+-----------
+使用if语句来检查每个命令的退出状态：
+```
+#!/bin/bash
+
+if command1; then
+    if command2; then
+        echo "Both commands executed successfully."
+    else
+        echo "Command2 failed."
+    fi
+else
+    echo "Command1 failed."
+fi
+```

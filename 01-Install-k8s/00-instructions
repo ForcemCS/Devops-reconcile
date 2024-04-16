@@ -40,3 +40,6 @@ fi
 ```
 #awk的使用
 awk       '/10003/ {sub(/enabled: true/, "enabled: false", $0); print }'  values.yaml
+#sed的使用
+sed -i '/apple/ { /banana/ s/.*/fruit salad/ }' example.txt
+-i选项表示直接修改文件内容，/apple/和/banana/是两个条件，{}中的内容表示同时满足这两个条件时执行的操作，s/.*/fruit salad/表示将匹配到的行替换为fruit salad。

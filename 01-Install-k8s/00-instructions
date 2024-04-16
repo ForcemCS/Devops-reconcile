@@ -38,3 +38,5 @@ else
     echo "Command1 failed."
 fi
 ```
+#awk的使用
+awk       '/10003/ {sub(/enabled: true/, "enabled: false", $0); print }'  values.yaml

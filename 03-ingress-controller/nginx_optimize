@@ -1,0 +1,11 @@
+keepalive_timeout：这个指令用于设置客户端到 Nginx 服务器的连接保持活动的时间，以及 Nginx 到上游服务器的连接保持活动的时间。它可以帮助管理长连接的持续时间，但它不是用于在连接达到某个时间后自动断开。
+
+keepalive_timeout 15s;  # 客户端和服务器的连接在 15 秒内没有活动则关闭
+
+proxy_read_timeout 和 proxy_send_timeout：这些指令分别用于设置 Nginx 从上游服务器读取数据的超时时间和发送数据到上游服务器的超时时间。如果在这些超时时间内没有数据被读取或发送，连接将被关闭。
+
+proxy_read_timeout 30s;
+proxy_send_timeout 30s;
+proxy_connect_timeout：这个指令设置 Nginx 尝试与上游服务器建立连接的超时时间。一旦连接建立，此参数不再适用。
+
+proxy_connect_timeout 5s;

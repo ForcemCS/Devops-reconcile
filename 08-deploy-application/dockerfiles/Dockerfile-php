@@ -1,0 +1,11 @@
+FROM php:7.1-fpm
+
+RUN sed -i -E 's/(deb|security).debian.org/mirrors.aliyun.com/g' /etc/apt/sources.list \
+    && apt-get update \
+    && apt-get install -y rsyslog \
+    && docker-php-ext-install fileinfo \
+    && docker-php-ext-install gettext \
+    && docker-php-ext-install mysqli \
+    && docker-php-ext-install pdo pdo_mysql
+
+COPY ./ro3_gm      /usr/share/nginx/html

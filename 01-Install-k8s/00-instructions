@@ -67,3 +67,5 @@ curl -X POST -H "Content-Type: application/json" -d '{
         }
     }
 }' -H "Custom-Header: value" http://example.com/api/endpoint
+#生成 SSH Key
+ssh-keygen -t rsa -b 4096 -C "your_email@example.com"

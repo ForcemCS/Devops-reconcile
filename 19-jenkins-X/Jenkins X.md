@@ -66,7 +66,7 @@ Jenkins X 使用最佳工具和微服务的松耦合架构来创建云原生 CI/
 
 #### 架构概述
 
-<img src="./imag/Jenkins X 高级架构2.png" alt="Jenkins X 高级架构2" style="zoom:50%;" />
+<img src="./img/Jenkins X 高级架构2.png" alt="Jenkins X 高级架构2" style="zoom:50%;" />
 
 在 Jenkins X 中，CI/CD 流程始于向 SCM 提交或拉取请求。接下来，当Prow/Lighthouse监听器在等待SCM事件时，它们会..：
 

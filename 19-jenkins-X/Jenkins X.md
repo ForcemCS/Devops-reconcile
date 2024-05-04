@@ -201,7 +201,7 @@ Jenkins X 构想了整个流水线工作流程--从 SCM 提交到构建、测试
 
 Jenkins X 使用 GitOps 原则来管理部署到不同环境中的 Kubernetes 资源的配置和版本。
 
-<img src="./imag/1.png" alt="1" style="zoom:60%;" />
+<img src="./img/1.png" alt="1" style="zoom:60%;" />
 
 每个环境都映射到 Kubernetes 集群中唯一的命名空间。每当为某个环境打开拉取请求时，就会启动管道运行，并在环境命名空间中部署新的应用程序。管道工作流还能将应用从一个环境推广到另一个环境。例如，成功的管道运行可将应用程序从暂存环境提升到生产环境。
 
@@ -347,7 +347,7 @@ jx promote --app myapp --version 1.0.0 --env production
 
 Jenkins X 可以协调应用程序在不同环境中的运行
 
-<img src="./imag/overview.png" alt="overview" style="zoom:50%;" />
+<img src="./img/overview.png" alt="overview" style="zoom:50%;" />
 
 ### Generating a Preview Environment
 
@@ -369,7 +369,7 @@ Jenkins X 可以协调应用程序在不同环境中的运行
 
 5. GitHub 将检测到新的分支推送，并提示发起拉取请求。
 
-   ![2](./imag/2.png)
+   ![2](./img/2.png)
 
 6. Jenkins X 将在预览环境中部署这些更改，并将应用程序链接发布到拉取请求页面上。 
 

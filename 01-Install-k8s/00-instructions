@@ -77,3 +77,5 @@ ssh $remote_server_user@$remote_server_ip "redis-cli -h $redis_server_ip -p $red
 kubectl get crd | grep victoriametrics.com | awk '{print $1 }' | xargs -i  kubectl  patch  crd  {} -p '{"metadata":{"finalizers":null}}'
 #删除当前目录下的所有内容，但是排除docs
 find . -mindepth 1 -not -path "./docs" -delete
+##
+root@master01:~/v1.30/12-tekton/clone-build-helm# kubectl get secrets  vault-auth-secret  -o json    |jq .data'."ca.crt"'   -r    |base64    -d

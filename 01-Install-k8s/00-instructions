@@ -79,3 +79,5 @@ kubectl get crd | grep victoriametrics.com | awk '{print $1 }' | xargs -i  kubec
 find . -mindepth 1 -not -path "./docs" -delete
 ##
 root@master01:~/v1.30/12-tekton/clone-build-helm# kubectl get secrets  vault-auth-secret  -o json    |jq .data'."ca.crt"'   -r    |base64    -d
+##
+docker run -d  --name minio  -p 9000:9000 -p 9001:9001  -v /root/minio:/data   -e "MINIO_ACCESS_KEY=minio" -e "MINIO_SECRET_KEY=basic@123"  quay.io/minio/minio server /data --console-address ":9001"

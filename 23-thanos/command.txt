@@ -1,0 +1,2 @@
+kubectl -n thanos create secret generic thanos-s3-config --from-file=objstore.yml=./s3.yaml
+helm -n thanos  install thanos bitnami/thanos --values thanos-values.yaml

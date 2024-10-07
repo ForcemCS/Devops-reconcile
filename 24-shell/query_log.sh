@@ -16,10 +16,7 @@ echo "【注意时间信息应该减少8小时】"
 
 
 if [[ "$para" =~ ^[0-9]+$ ]]; then
-
   kubectl -n hdh5 logs --tail="$para" "$pod_name" -f
-
 else
   kubectl -n hdh5 logs --since-time="$para" "$pod_name" -f
-
 fi

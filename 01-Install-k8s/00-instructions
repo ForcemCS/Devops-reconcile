@@ -83,3 +83,5 @@ root@master01:~/v1.30/12-tekton/clone-build-helm# kubectl get secrets  vault-aut
 docker run -d  --name minio  -p 9000:9000 -p 9001:9001  -v /root/minio:/data   -e "MINIO_ACCESS_KEY=minio" -e "MINIO_SECRET_KEY=basic@123"  quay.io/minio/minio server /data --console-address ":9001"
 ## 打包
 tar -zcvf proj.tar.gz --exclude='/root/proj/roh5/mysql-5.7/data' --exclude='/root/proj/roh5/redis-6.0/data' /root/proj/
+##安装mysql5.7
+https://medium.com/@lesliedouglas23/how-to-install-mysql-5-0-on-ubuntu-20-04-or-later-4d27de464eef

@@ -1,0 +1,138 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: redis-config
+  namespace: hdh5
+  labels:
+    app: redis
+data:
+  redis.conf: |-
+    port 6379
+    bind 0.0.0.0
+    appendonly no
+    daemonize no
+    requirepass xxxxxxxxxxx
+    databases 256
+    save 900 1
+    save 300 10
+    save 60 10000
+    stop-writes-on-bgsave-error yes
+    rdbcompression yes
+    rdbchecksum yes
+    dbfilename dump.rdb
+    dir /var/lib/redis
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: redis
+  namespace: hdh5
+spec:
+  ports:
+    - port: 6379
+      protocol: TCP
+      targetPort: 6379
+      nodePort: 30009
+  selector:
+    app: redis
+  type: NodePort
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: redis
+  name: redis-redis
+  namespace: hdh5
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: redis
+  template:
+    metadata:
+      labels:
+        app: redis
+    spec:
+      containers:
+      - image: redis:6.0.20
+        command:
+          - "sh"
+          - "-c"
+          - "redis-server /usr/local/redis/redis.conf"
+        ports:
+        - containerPort: 6379
+          name: redis
+        resources:
+          limits:
+            cpu: 1000m
+            memory: 2048Mi
+        imagePullPolicy: IfNotPresent
+        livenessProbe:
+          failureThreshold: 3
+          initialDelaySeconds: 300
+          periodSeconds: 10
+          successThreshold: 1
+          tcpSocket:
+            port: 6379
+          timeoutSeconds: 1
+        name: redis	
+        livenessProbe:
+          tcpSocket:
+            port: 6379
+          initialDelaySeconds: 300
+          timeoutSeconds: 1
+          periodSeconds: 10
+          successThreshold: 1
+          failureThreshold: 3
+        readinessProbe:
+          tcpSocket:
+            port: 6379
+          initialDelaySeconds: 5
+          timeoutSeconds: 1
+          periodSeconds: 10
+          successThreshold: 1
+          failureThreshold: 3
+      
+        volumeMounts:
+        - mountPath: /var/lib/redis
+          name: data
+        - name: config
+          mountPath:  /usr/local/redis/redis.conf
+          subPath: redis.conf
+      volumes:
+      - name: data
+        persistentVolumeClaim:
+          claimName: hdh5-redis-pvc
+      - name: config
+        configMap:
+          name: redis-config
+---
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: hdh5-redis-pv
+  labels:
+    type: local
+spec:
+  storageClassName: hdh5
+  capacity:
+    storage: 5Gi
+  accessModes:
+    - ReadWriteOnce
+  hostPath:
+    path: "/root/proj/hdh5/redis-6.0/data"
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: hdh5-redis-pvc
+  namespace: hdh5
+spec:
+  storageClassName: hdh5
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 5Gi
+    

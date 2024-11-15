@@ -85,3 +85,10 @@ docker run -d  --name minio  -p 9000:9000 -p 9001:9001  -v /root/minio:/data   -
 tar -zcvf proj.tar.gz --exclude='/root/proj/roh5/mysql-5.7/data' --exclude='/root/proj/roh5/redis-6.0/data' /root/proj/
 ##安装mysql5.7
 docker run  -d  --name mysql  --restart=always -p 3306:3306  -v $PWD/data:/mysql_data -e MYSQL_ROOT_PASSWORD=basic123   bitnami/mysql:5.7.43
+## 子网划分
+192.168.1.0/24 可划分为
+借用 2 位: /26 (255.255.255.192)
+子网 1: 192.168.1.0/26 (可用 IP 范围: 192.168.1.1 - 192.168.1.62)
+子网 2: 192.168.1.64/26 (可用 IP 范围: 192.168.1.65 - 192.168.1.126)
+子网 3: 192.168.1.128/26 (可用 IP 范围: 192.168.1.129 - 192.168.1.190)
+子网 4: 192.168.1.192/26 (可用 IP 范围: 192.168.1.193 - 192.168.1.254)

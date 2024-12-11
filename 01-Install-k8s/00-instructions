@@ -92,3 +92,8 @@ docker run  -d  --name mysql  --restart=always -p 3306:3306  -v $PWD/data:/mysql
 子网 2: 192.168.1.64/26 (可用 IP 范围: 192.168.1.65 - 192.168.1.126)
 子网 3: 192.168.1.128/26 (可用 IP 范围: 192.168.1.129 - 192.168.1.190)
 子网 4: 192.168.1.192/26 (可用 IP 范围: 192.168.1.193 - 192.168.1.254)
+##MYSQL
+mysql -h 10.1.196.73 -u root -pXXXXXXXXX db_ro3_server -e "SELECT GROUP_CONCAT(id SEPARATOR ' ') AS ids FROM T_SERVER;"
+
+
+mysql -h 10.1.196.73 -u root -pXXXXXXXXX db_ro3_server -s -N -e "SELECT GROUP_CONCAT(id SEPARATOR ' ') FROM T_SERVER;"  |grep -v 

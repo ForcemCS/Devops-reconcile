@@ -94,6 +94,39 @@ docker run  -d  --name mysql  --restart=always -p 3306:3306  -v $PWD/data:/mysql
 子网 4: 192.168.1.192/26 (可用 IP 范围: 192.168.1.193 - 192.168.1.254)
 ##MYSQL
 mysql -h 10.1.196.73 -u root -pXXXXXXXXX db_ro3_server -e "SELECT GROUP_CONCAT(id SEPARATOR ' ') AS ids FROM T_SERVER;"
-
-
 mysql -h 10.1.196.73 -u root -pXXXXXXXXX db_ro3_server -s -N -e "SELECT GROUP_CONCAT(id SEPARATOR ' ') FROM T_SERVER;"  |grep -v 
+##mysql语句
+
+
+SELECT
+    tli.uid,
+    tli.server_id,
+    tli.regist_time,
+    tli.last_login_time,
+    tor.platform_amount,
+    tor.delivery_time,
+    tor.ip
+FROM
+    T_LOGIN_INFO AS tli
+LEFT JOIN
+    T_ORDER AS tor ON tli.uid = tor.uid
+ORDER BY
+    tli.last_login_time;
+	
+	
+SELECT uid, server_id, regist_time, last_login_time
+FROM T_LOGIN_INFO
+ORDER BY last_login_time;
+
+
+SELECT
+    li.uid,
+    li.server_id,
+    li.regist_time,
+    li.last_login_time,
+    CASE 
+        WHEN EXISTS (SELECT 1 FROM T_ORDER AS o WHERE o.uid = li.uid AND o.status = 2) THEN '是'
+        ELSE '否'
+    END AS 是否充值
+FROM
+    T_LOGIN_INFO AS li;

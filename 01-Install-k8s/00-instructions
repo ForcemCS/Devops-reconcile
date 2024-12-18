@@ -130,3 +130,13 @@ SELECT
     END AS 是否充值
 FROM
     T_LOGIN_INFO AS li;
+##
+SELECT
+    li.uid,
+    li.server_id,
+    li.regist_time,
+    li.last_login_time,
+    CASE WHEN EXISTS (SELECT 1 FROM T_ORDER o WHERE o.uid = li.uid AND o.status = 2) THEN '是' ELSE '否' END AS 是否充值,
+    (SELECT MIN(delivery_time) FROM T_ORDER o WHERE o.uid = li.uid AND o.status = 2) AS 首充时间
+FROM
+    T_LOGIN_INFO li;

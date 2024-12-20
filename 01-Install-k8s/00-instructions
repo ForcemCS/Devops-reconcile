@@ -140,3 +140,4 @@ SELECT
     (SELECT MIN(delivery_time) FROM T_ORDER o WHERE o.uid = li.uid AND o.status = 2) AS 首充时间
 FROM
     T_LOGIN_INFO li;
+##mysql创建只读用户

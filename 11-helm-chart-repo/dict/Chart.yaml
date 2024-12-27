@@ -1,0 +1,9 @@
+apiVersion: v2
+appVersion: v1
+description: middle在serverserverless集群下的v1版
+maintainers:
+- email: kuiinative@gmail.com
+  name: wukui
+name: middle
+type: application
+version: v1

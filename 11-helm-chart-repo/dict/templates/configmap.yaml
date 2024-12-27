@@ -1,0 +1,43 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: middle-cm
+data:
+  # 类文件键
+  default.conf: |    
+    server {
+        listen       80;
+        listen  [::]:80;
+        server_name  localhost;
+    
+        #access_log  /var/log/nginx/host.access.log  main;
+    
+    
+        #error_page  404              /404.html;
+    
+        # redirect server error pages to the static page /50x.html
+        #
+        location / {
+          root   /usr/share/nginx/html;
+          index  index.html index.htm;
+            # 用于配合前端路由为h5模式使用，防止刷新404 https://router.vuejs.org/zh/guide/essentials/history-mode.html#nginx
+          try_files $uri $uri/ /index.html;
+        }  
+        
+        # 第一个代理后端地址（vite.config.ts里叫 /api，这里也要保持一致）
+        location /api {
+            # 如果后端在本地比如127.0.0.1或者localhost请解开下面的rewrite注释即可
+            # rewrite  ^.+api/?(.*)$ /$1 break;
+            # 这里填写后端地址（后面一定不要忘记添加 / ）
+            proxy_pass http://{{ $.Values.datacenterProxy }}/;
+            proxy_set_header Host $host;
+            proxy_set_header Cookie $http_cookie;
+            proxy_set_header X-Real-IP $remote_addr;
+            proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+            proxy_redirect default;
+            add_header Access-Control-Allow-Origin *;
+            add_header Access-Control-Allow-Headers X-Requested-With;
+            add_header Access-Control-Allow-Methods GET,POST,OPTIONS;
+        }
+    
+    }

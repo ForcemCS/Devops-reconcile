@@ -1,0 +1,51 @@
+{{ $global := . }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "middle.fullname" $global }}
+  labels:
+    {{- include "middle.labels" $global | nindent 4 }}
+spec:
+  replicas: {{ $global.Values.replicas }}
+  selector:
+    matchLabels:
+      {{- include "middle.selectorLabels" $global | nindent 6 }}
+      game-svc: "game-svc-{{ $global.Chart.Name }}"
+  template:
+    metadata:
+      labels:
+        {{- include "middle.selectorLabels" $global | nindent 8 }}
+        game-svc: "game-svc-{{ $global.Chart.Name }}"
+      annotations:
+        eks.tke.cloud.tencent.com/registry-insecure-skip-verify: "lb-etkxh0j3-azlwq5ic9dpkotm4.clb.ap-shanghai.tencentclb.com:5000"
+    spec:
+      imagePullSecrets:
+      - name: auth-registry-secret
+      containers:
+      - name: {{ $global.Chart.Name }}
+        image: "{{ $global.Values.image.repo }}:{{ $global.Values.image.tag }}"
+        imagePullPolicy: IfNotPresent
+        resources:
+          limits:
+            cpu: 200m
+            memory: 1000Mi
+          requests:
+            cpu: 20m
+            memory: 30Mi
+        ports:
+        - name: server1
+          containerPort: 80
+        volumeMounts:
+        - name: config
+          mountPath: "/etc/nginx/conf.d/default.conf"
+          subPath: "default.conf"
+      volumes:
+      - name: config
+        configMap:
+          # 提供你想要挂载的 ConfigMap 的名字
+          name: middle-cm
+          # 来自 ConfigMap 的一组键，将被创建为文件
+          items:
+          - key: "default.conf"
+            path: "default.conf"
+

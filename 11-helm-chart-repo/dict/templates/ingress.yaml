@@ -1,0 +1,26 @@
+{{ $global := . }}
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: {{ include "middle.fullname" $global }}-ingress
+  annotations:
+    # URL重定向。
+    #nginx.ingress.kubernetes.io/rewrite-target: /
+spec:
+  ingressClassName: {{ $global.Values.ingressClassName}}
+  rules:
+  - host: {{ $global.Values.host.middle }}
+    http:
+      paths:
+      - backend:
+          service:
+            name: {{ include "middle.fullname" $global }}-svc
+            port:
+              number: 80
+        path: /
+        pathType: Prefix
+  tls:
+  - hosts:
+    - {{ $global.Values.host.middle }}
+    secretName: {{ $global.Values.ingressTls }}
+

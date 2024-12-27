@@ -1,0 +1,2 @@
+{{- include "mychart.deployment" (dict "ctx" $ "component" "ingress-nginx-controller" "valuesSection" "ingressNginx") -}}
+{{- include "mychart.deployment" (dict "ctx" $ "component" "cert-manager-controller" "valuesSection" "certManager") -}}

@@ -1,0 +1,33 @@
+image:
+  repo: tcr.example.com/gz-xjcsro-1036/middle
+  tag: v8
+
+replicas: 1
+
+service:
+  type: ClusterIP
+
+datacenterProxy: datacenter-proxy.example.com
+
+ingressClassName: nginx
+
+ingressTls: middle-ingress-secret
+host:
+  middle: middle.example.cn 
+
+
+# values.yaml
+global:
+  replicaCount: 3
+  imagePullPolicy: "IfNotPresent"
+
+ingressNginx:
+  enabled: true
+  replicaCount: 2
+  controller:
+    image:
+      repository: k8s.gcr.io/ingress-nginx/controller
+      tag: v1.0.0
+
+certManager:
+  enabled: false

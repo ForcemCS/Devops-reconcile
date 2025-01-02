@@ -1,0 +1,8 @@
+servers:  
+{{- range $i, $img := $.Values.server }}
+    tag: {{ $img.tag }}  
+{{- end }}
+servers:
+{{- range $.Values.server }}
+  tag: {{ .tag}}
+{{- end }}

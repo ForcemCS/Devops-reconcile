@@ -1,0 +1,5 @@
+servers:  
+{{- $servers := .Values.server }}  
+{{- range $server := $servers }}  
+    tag: {{ $server.tag }}  
+{{- end }}

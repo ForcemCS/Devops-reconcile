@@ -7,3 +7,25 @@ file1:
 file2:
 - 99030:G
 - 99031
+
+server:  
+- id: 10030  
+  name: operation  
+  runtype: 0  
+  siteid: 1  
+  parent: 0  
+  fight: flight01  
+  trade: trans01  
+  repo: registry.ro3.xyz  
+  image: hdh5test  
+  tag: "20241204203734"  
+- id: 10031  
+  name: operation  
+  runtype: 0  
+  siteid: 1  
+  parent: 0  
+  fight: flight01  
+  trade: trans01  
+  repo: registry.ro3.xyz  
+  image: hdh5test  
+  tag: "20241204203xxx"

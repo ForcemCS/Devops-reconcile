@@ -141,3 +141,5 @@ SELECT
 FROM
     T_LOGIN_INFO li;
 ##mysql创建只读用户
+
+alter TABLE T_USER MODIFY pers VARCHAR(4096) DEFAULT 'XXX'

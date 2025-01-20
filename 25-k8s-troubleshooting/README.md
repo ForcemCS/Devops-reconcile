@@ -10,3 +10,17 @@ root       40818  0.0  0.0   6332  2196 pts/1    S+   11:09   0:00 grep 7c0a115c
 root@debian:~#  crictl inspect   90037e25de480     | jq -r '.info.pid'
 39744
 ```
+分析内存泄露
+```shell
+指定检测间隔和执行时间（例如：每5秒检测一次，持续60秒）：
+sudo memleak -p 39744 -t 5 60
+
+只显示前10个最严重的内存泄漏:
+sudo memleak -p 39744 --count 10
+
+根据命令名称过滤, 并显示 top 5 泄漏:
+sudo memleak -c skynet --count 5
+
+只显示汇总信息:
+sudo memleak -c skynet --combined-only
+```
